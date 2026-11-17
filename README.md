@@ -2,9 +2,12 @@
 
 Static React (Vite + TypeScript) single-page app.
 
+## Mock Accounts:
+Mock Accounts (password: Demo1234): ayse.yilmaz@metu.edu.tr verified, burak.celik@metu.edu.tr not verified. Verification code: 123456 Do not copy-paste!
+
 ## Visuals
-<img width="1239" height="1074" alt="Ekran Resmi 2026-11-17 13 09 25" src="https://github.com/user-attachments/assets/584f9dac-0c97-43cd-9979-81b77da74795" />
-<img width="1239" height="1074" alt="image" src="https://github.com/user-attachments/assets/045b8b0f-daa0-421f-a710-73f4d823ef93" />
+<img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/c6acfe8a-4822-4b30-9d77-b8101b81e34d" />
+<img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/ec0170e1-65b4-4005-a3be-2035e246db1d" />
 
 
 ## Requirements
