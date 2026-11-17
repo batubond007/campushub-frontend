@@ -9,7 +9,8 @@ const SECTIONS = [
 ]
 
 // Top navigation bar, shared by every page.
-// Signed out: Log in / Sign up. Signed in: the student's name, My account and Log out (US-03).
+// Signed out: page sections, Log in / Sign up. Signed in: Events (+ Create event for University Admins),
+// the user's name for My account, and Log out (US-03).
 function NavBar() {
   const { user, logout } = useAuth()
 
@@ -26,11 +27,18 @@ function NavBar() {
           Campus<span className="brand-accent">Hub</span>
         </Link>
         <nav aria-label="Main" className="nav-links">
-          {SECTIONS.map((section) => (
-            <a key={section.id} href={`/#${section.id}`} className="nav-link">
-              {section.label}
-            </a>
-          ))}
+          {user ? (
+            <>
+              <Link to="/events" className="nav-link">Events</Link>
+              {user.role === 'UNIVERSITY_ADMIN' && <Link to="/events/new" className="nav-link">Create event</Link>}
+            </>
+          ) : (
+            SECTIONS.map((section) => (
+              <a key={section.id} href={`/#${section.id}`} className="nav-link">
+                {section.label}
+              </a>
+            ))
+          )}
           {user ? (
             <span className="nav-auth">
               <Link to="/account" className="nav-user" title={user.email}>

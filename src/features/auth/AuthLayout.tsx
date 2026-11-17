@@ -8,7 +8,7 @@ function AuthLayout({ title, subtitle, children }: { title: string; subtitle: st
     <div className="auth-page">
       <aside className="auth-visual" aria-hidden="true">
         <div className="auth-visual-text">
-          <p className="auth-visual-kicker">Only for ODTÜ students</p>
+          <p className="auth-visual-kicker" lang="en">Only for ODTÜ students</p>
           <p className="auth-visual-title">Connect. Participate. Share. Belong.</p>
           <ul className="auth-visual-list">
             <li>Join campus events in one click</li>

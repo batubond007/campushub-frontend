@@ -126,3 +126,7 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.account-events-link {
+  margin-top: 14px;
+}

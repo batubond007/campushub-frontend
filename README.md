@@ -3,7 +3,7 @@
 Static React (Vite + TypeScript) single-page app.
 
 ## Mock Accounts:
-Mock Accounts (password: Demo1234): ayse.yilmaz@metu.edu.tr verified, burak.celik@metu.edu.tr not verified. Verification code: 123456 Do not copy-paste!
+Mock Accounts (password: Demo1234): ayse.yilmaz@metu.edu.tr verified, burak.celik@metu.edu.tr not verified, zeynep.demir@metu.edu.tr University Admin (can create events). Verification code: 123456 Do not copy-paste!
 
 ## Visuals
 <img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/c6acfe8a-4822-4b30-9d77-b8101b81e34d" />
@@ -22,14 +22,14 @@ Requests to `/api/*` are proxied to the backend at `http://localhost:8080` (see 
 
 ### Without the backend (mock API)
 ```bash
-npm run dev:mock   # http://localhost:5173, /api/auth/* answered by mock/authMock.ts
+npm run dev:mock   # http://localhost:5173, /api/* answered by the mock in mock/
 ```
-The mock covers sign-up, e-mail verification (OTP), resending the code, log-in, log-out and `GET /api/me`,
-with the same rules
+The mock covers sign-up, e-mail verification (OTP), resending the code, log-in, log-out, `GET /api/me`,
+listing events and creating events (University Admin only), with the same rules
 as the backend (6-digit code, valid 10 minutes, 5 attempts, 60 s before a new code). No e-mail is sent:
 the code is always **`123456`** and is also printed in the terminal. Data lives in memory and resets when
-the dev server restarts. Ready-made accounts (password `Demo1234`): `ayse.yilmaz@metu.edu.tr` (verified)
-and `burak.celik@metu.edu.tr` (waiting for verification). The mock is never part of `npm run build`.
+the dev server restarts. Ready-made accounts (password `Demo1234`): `ayse.yilmaz@metu.edu.tr` (verified student),
+`burak.celik@metu.edu.tr` (waiting for verification) and `zeynep.demir@metu.edu.tr` (University Admin). The mock is never part of `npm run build`.
 
 ## Project structure
 Code is grouped by feature (events, clubs, auth, ...). Import with the `@/` alias (`@/lib/http`), not `../../`.
