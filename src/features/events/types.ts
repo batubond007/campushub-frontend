@@ -28,3 +28,8 @@ export interface CreateEventRequest {
   startTime: string
   endTime: string
 }
+
+/** GET /api/events/:id — everything on the detail page. */
+export interface EventDetail extends CampusEvent {
+  ended: boolean
+}

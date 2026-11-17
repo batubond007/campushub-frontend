@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { authRoutes } from './authMock'
 import { eventRoutes } from './eventsMock'
-import { ApiError, type Body, type Routes } from './shared'
+import { ApiError, matchRoute, type Body, type Routes } from './shared'
 
 // Dev-only fake backend, so screens can be built and tested before the real backend is ready.
 //
@@ -41,14 +41,14 @@ export function mockApi(): Plugin {
       server.config.logger.info('\n  [mock] Mock API is on (auth + events). Every verification code is 123456.\n')
       server.middlewares.use(async (req, res, next) => {
         const path = (req.url ?? '').split('?')[0]
-        const handler = routes[`${req.method} ${path}`]
-        if (!handler) return next()
+        const match = matchRoute(routes, req.method ?? 'GET', path)
+        if (!match) return next()
         const auth = req.headers.authorization ?? ''
         const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
 
         await new Promise((r) => setTimeout(r, 300)) // feel like a real network call
         try {
-          const result = handler(await readBody(req), token)
+          const result = match.handler(await readBody(req), token, match.params)
           if (result === undefined) {
             res.statusCode = 204
             res.end()

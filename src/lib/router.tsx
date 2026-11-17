@@ -53,3 +53,18 @@ export function Link({ to, onClick, ...rest }: LinkProps) {
 export function getQueryParam(name: string) {
   return new URLSearchParams(window.location.search).get(name)
 }
+
+/** Matches a pattern such as "/events/:id" against a path. Returns the parameters, or null when it does not match. */
+export function matchPath(pattern: string, path: string): Record<string, string> | null {
+  const patternParts = pattern.split('/').filter(Boolean)
+  const pathParts = path.split('/').filter(Boolean)
+  if (patternParts.length !== pathParts.length) return null
+  const params: Record<string, string> = {}
+  for (let i = 0; i < patternParts.length; i++) {
+    const expected = patternParts[i]
+    const actual = decodeURIComponent(pathParts[i])
+    if (expected.startsWith(':')) params[expected.slice(1)] = actual
+    else if (expected !== actual) return null
+  }
+  return params
+}
