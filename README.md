@@ -6,8 +6,8 @@ Static React (Vite + TypeScript) single-page app.
 Mock Accounts (password: Demo1234): ayse.yilmaz@metu.edu.tr verified, burak.celik@metu.edu.tr not verified, zeynep.demir@metu.edu.tr University Admin (can create events). Verification code: 123456 Do not copy-paste!
 
 ## Visuals
-<img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/c6acfe8a-4822-4b30-9d77-b8101b81e34d" />
-<img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/ec0170e1-65b4-4005-a3be-2035e246db1d" />
+<img width="1612" height="1074" alt="18 Robotics Demo Day" src="https://github.com/user-attachments/assets/a7f9c14a-e3d5-4e4b-b151-6ca4dff68b6f" />
+
 
 
 ## Requirements
