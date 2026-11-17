@@ -1,8 +1,20 @@
+import {
+  AboutSection,
+  HeroSection,
+  LandingFooter,
+  TeamSection,
+  UniversitySection,
+} from '@/features/landing/sections'
+
+// Public landing page: hero image, what CampusHub is, supported university and the team.
 function HomePage() {
   return (
     <>
-      <h1>CampusHub</h1>
-      <p>Frontend is up and running.</p>
+      <HeroSection />
+      <AboutSection />
+      <UniversitySection />
+      <TeamSection />
+      <LandingFooter />
     </>
   )
 }
