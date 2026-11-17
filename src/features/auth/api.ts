@@ -3,6 +3,7 @@ import type {
   LoginRequest,
   LoginResponse,
   MessageResponse,
+  Profile,
   RegisterRequest,
   RegisterResponse,
   VerifyRequest,
@@ -22,4 +23,16 @@ export function verifyEmail(body: VerifyRequest) {
 
 export function resendCode(email: string) {
   return http<MessageResponse>('/api/auth/resend-otp', { method: 'POST', body: JSON.stringify({ email }) })
+}
+
+const bearer = (token: string) => ({ Authorization: `Bearer ${token}` })
+
+/** The signed-in user's profile. Fails with 401 when the token is no longer valid. */
+export function getMe(token: string) {
+  return http<Profile>('/api/me', { headers: bearer(token) })
+}
+
+/** Ends the session on the server (all of this user's tokens stop working). */
+export function logout(token: string) {
+  return http<void>('/api/auth/logout', { method: 'POST', headers: bearer(token) })
 }

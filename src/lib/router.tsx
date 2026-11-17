@@ -21,6 +21,9 @@ export function usePath() {
     const update = () => setPath(window.location.pathname)
     window.addEventListener('popstate', update)
     window.addEventListener(NAVIGATE_EVENT, update)
+    // A child's effect can call navigate() before this listener exists (React runs child
+    // effects first), e.g. a redirect on the very first render. Catch up with the URL now.
+    update()
     return () => {
       window.removeEventListener('popstate', update)
       window.removeEventListener(NAVIGATE_EVENT, update)

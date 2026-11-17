@@ -1,0 +1,128 @@
+.account {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.account-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, var(--primary-dark), var(--primary));
+  color: #fff;
+}
+
+.account-avatar {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.account-kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.account-name {
+  margin: 2px 0;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  line-height: 1.2;
+}
+
+.account-sub {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.account-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 800px) {
+  .account-grid {
+    grid-template-columns: 3fr 2fr;
+  }
+}
+
+.account-card {
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.account-card h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+.account-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px 20px;
+  margin: 0;
+}
+
+.account-details dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.account-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.account-muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.account-logout-title {
+  margin-top: 24px !important;
+}
+
+.button.account-logout {
+  margin-top: 14px;
+  border-color: var(--error);
+  color: var(--error);
+  font-weight: 600;
+}
+
+.button.account-logout:hover:not(:disabled) {
+  background: var(--error-bg);
+}
+
+.button.account-logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
