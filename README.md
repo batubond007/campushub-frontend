@@ -6,8 +6,9 @@ Static React (Vite + TypeScript) single-page app.
 Mock Accounts (password: Demo1234): ayse.yilmaz@metu.edu.tr verified, burak.celik@metu.edu.tr not verified, zeynep.demir@metu.edu.tr University Admin (can create events). Verification code: 123456 Do not copy-paste!
 
 ## Visuals
-<img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/c6acfe8a-4822-4b30-9d77-b8101b81e34d" />
-<img width="1510" height="1074" alt="image" src="https://github.com/user-attachments/assets/ec0170e1-65b4-4005-a3be-2035e246db1d" />
+<img width="1603" height="1074" alt="Welcome, Zeynep!" src="https://github.com/user-attachments/assets/79d2d9ad-1ee2-4d37-bf52-38f08c07cca5" />
+<img width="1520" height="1074" alt="image" src="https://github.com/user-attachments/assets/103306d8-e6d4-4c51-9f95-19e0f28951df" />
+
 
 
 ## Requirements
