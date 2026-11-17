@@ -1,11 +1,14 @@
 import AuthLayout from '@/features/auth/AuthLayout'
+import RedirectIfSignedIn from '@/features/auth/RedirectIfSignedIn'
 import SignupForm from '@/features/auth/SignupForm'
 
 function SignupPage() {
   return (
-    <AuthLayout title="Create your account" subtitle="Join CampusHub with your ODTÜ e-mail address.">
-      <SignupForm />
-    </AuthLayout>
+    <RedirectIfSignedIn>
+      <AuthLayout title="Create your account" subtitle="Join CampusHub with your ODTÜ e-mail address.">
+        <SignupForm />
+      </AuthLayout>
+    </RedirectIfSignedIn>
   )
 }
 

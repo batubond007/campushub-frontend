@@ -21,7 +21,8 @@ Requests to `/api/*` are proxied to the backend at `http://localhost:8080` (see 
 ```bash
 npm run dev:mock   # http://localhost:5173, /api/auth/* answered by mock/authMock.ts
 ```
-The mock covers sign-up, e-mail verification (OTP), resending the code and log-in, with the same rules
+The mock covers sign-up, e-mail verification (OTP), resending the code, log-in, log-out and `GET /api/me`,
+with the same rules
 as the backend (6-digit code, valid 10 minutes, 5 attempts, 60 s before a new code). No e-mail is sent:
 the code is always **`123456`** and is also printed in the terminal. Data lives in memory and resets when
 the dev server restarts. Ready-made accounts (password `Demo1234`): `ayse.yilmaz@metu.edu.tr` (verified)

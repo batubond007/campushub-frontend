@@ -1,5 +1,6 @@
 import '@/components/NavBar.css'
-import { Link } from '@/lib/router'
+import { useAuth } from '@/features/auth/AuthContext'
+import { Link, navigate } from '@/lib/router'
 
 const SECTIONS = [
   { id: 'about', label: 'About' },
@@ -8,7 +9,16 @@ const SECTIONS = [
 ]
 
 // Top navigation bar, shared by every page.
+// Signed out: Log in / Sign up. Signed in: the student's name, My account and Log out (US-03).
 function NavBar() {
+  const { user, logout } = useAuth()
+
+  function handleLogout() {
+    // Navigate in the same step as the session ends (see AccountOverview), then finish in the background.
+    void logout()
+    navigate('/login?loggedOut=1', { replace: true })
+  }
+
   return (
     <header className="nav">
       <div className="nav-inner">
@@ -21,10 +31,22 @@ function NavBar() {
               {section.label}
             </a>
           ))}
-          <span className="nav-auth">
-            <Link to="/login" className="button">Log in</Link>
-            <Link to="/signup" className="button primary">Sign up</Link>
-          </span>
+          {user ? (
+            <span className="nav-auth">
+              <Link to="/account" className="nav-user" title={user.email}>
+                <span className="nav-user-avatar" aria-hidden="true">
+                  {user.fullName.trim()[0]?.toLocaleUpperCase('tr-TR')}
+                </span>
+                <span className="nav-user-name">{user.fullName.split(' ')[0]}</span>
+              </Link>
+              <button type="button" className="button" onClick={handleLogout}>Log out</button>
+            </span>
+          ) : (
+            <span className="nav-auth">
+              <Link to="/login" className="button">Log in</Link>
+              <Link to="/signup" className="button primary">Sign up</Link>
+            </span>
+          )}
         </nav>
       </div>
     </header>

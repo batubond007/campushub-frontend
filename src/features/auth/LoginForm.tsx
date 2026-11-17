@@ -1,15 +1,21 @@
 import { useState, type FormEvent } from 'react'
-import { login } from '@/features/auth/api'
+import { useAuth } from '@/features/auth/AuthContext'
 import { FormField, PasswordField } from '@/features/auth/FormField'
-import { saveSession } from '@/features/auth/session'
 import { validateLogin, type FieldErrors } from '@/features/auth/validation'
 import { HttpError } from '@/lib/http'
-import { getQueryParam, Link, navigate } from '@/lib/router'
+import { getQueryParam, Link } from '@/lib/router'
 
-/** US-03: log in with university e-mail and password. */
+/**
+ * US-03: log in with university e-mail and password.
+ * Only verified accounts can log in; the backend answers 403 for the others.
+ * After a successful login RedirectIfSignedIn moves the student on.
+ */
 function LoginForm() {
+  const { login } = useAuth()
   const [email, setEmail] = useState(getQueryParam('email') ?? '')
   const [verified] = useState(getQueryParam('verified') === '1')
+  const [loggedOut] = useState(getQueryParam('loggedOut') === '1')
+  const [sessionNeeded] = useState(Boolean(getQueryParam('next')))
   // Set when the backend says the account is not verified yet, to offer the way back to /verify.
   const [needsVerification, setNeedsVerification] = useState(false)
   const [password, setPassword] = useState('')
@@ -27,8 +33,7 @@ function LoginForm() {
 
     setSubmitting(true)
     try {
-      saveSession(await login({ email: email.trim(), password }))
-      navigate('/')
+      await login({ email: email.trim(), password })
     } catch (error) {
       if (error instanceof HttpError) {
         setErrors(error.fieldErrors)
@@ -46,6 +51,12 @@ function LoginForm() {
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
       {verified && !formError && (
         <p className="form-success" role="status">Your e-mail is verified. You can log in now.</p>
+      )}
+      {loggedOut && !formError && (
+        <p className="form-success" role="status">You have logged out. See you soon!</p>
+      )}
+      {sessionNeeded && !loggedOut && !formError && (
+        <p className="form-info" role="status">Please log in to see that page.</p>
       )}
       {formError && (
         <p className="form-alert" role="alert">

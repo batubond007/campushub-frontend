@@ -1,11 +1,14 @@
 import AuthLayout from '@/features/auth/AuthLayout'
+import RedirectIfSignedIn from '@/features/auth/RedirectIfSignedIn'
 import LoginForm from '@/features/auth/LoginForm'
 
 function LoginPage() {
   return (
-    <AuthLayout title="Welcome back" subtitle="Log in with your ODTÜ e-mail to continue.">
-      <LoginForm />
-    </AuthLayout>
+    <RedirectIfSignedIn>
+      <AuthLayout title="Welcome back" subtitle="Log in with your ODTÜ e-mail to continue.">
+        <LoginForm />
+      </AuthLayout>
+    </RedirectIfSignedIn>
   )
 }
 

@@ -1,5 +1,6 @@
 import { FEATURES, TEAM } from '@/features/landing/content'
 import '@/features/landing/landing.css'
+import { useAuth } from '@/features/auth/AuthContext'
 import { Link } from '@/lib/router'
 
 export function HeroSection() {
@@ -17,6 +18,7 @@ export function HeroSection() {
 }
 
 export function AboutSection() {
+  const { user } = useAuth()
   return (
     <section id="about" className="landing-section">
       <p className="eyebrow" lang="en">What is CampusHub?</p>
@@ -36,8 +38,14 @@ export function AboutSection() {
         ))}
       </ul>
       <div className="cta-row">
-        <Link to="/signup" className="button primary">Create your account</Link>
-        <Link to="/login" className="button">Log in</Link>
+        {user ? (
+          <Link to="/account" className="button primary">Go to my account</Link>
+        ) : (
+          <>
+            <Link to="/signup" className="button primary">Create your account</Link>
+            <Link to="/login" className="button">Log in</Link>
+          </>
+        )}
       </div>
     </section>
   )
