@@ -2,6 +2,12 @@
 
 Static React (Vite + TypeScript) single-page app.
 
+## Visuals
+<img width="1339" height="943" alt="image" src="https://github.com/user-attachments/assets/c0a5da53-632b-4f06-a7e0-fb4a262128fe" />
+<img width="1339" height="847" alt="image" src="https://github.com/user-attachments/assets/78733153-b7be-48ea-9354-2c9806539c46" />
+<img width="1334" height="370" alt="image" src="https://github.com/user-attachments/assets/097223fa-68e3-4c01-8dc8-8842b1e40353" />
+
+
 ## Requirements
 - Node.js 22 (see `.nvmrc`; minimum 20.19)
 
