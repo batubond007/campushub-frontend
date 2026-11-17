@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { resendCode, verifyEmail } from '@/features/auth/api'
-import { FormField } from '@/features/auth/FormField'
+import { FormField } from '@/components/FormField'
 import OtpInput from '@/features/auth/OtpInput'
 import { HttpError } from '@/lib/http'
 import { Link, navigate } from '@/lib/router'

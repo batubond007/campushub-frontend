@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { register } from '@/features/auth/api'
-import { FormField, PasswordField } from '@/features/auth/FormField'
+import { FormField, PasswordField } from '@/components/FormField'
 import { passwordChecks, validateSignup, type FieldErrors } from '@/features/auth/validation'
 import { HttpError } from '@/lib/http'
 import { Link, navigate } from '@/lib/router'

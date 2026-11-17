@@ -1,13 +1,7 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Plugin } from 'vite'
+import { ApiError, type Routes } from './shared'
 
-// Dev-only mock of the backend's /api/auth and /api/me endpoints, so the sign-up → verify → log-in flow
-// can be built and tested before the real backend is ready.
-//
-//   npm run dev:mock     -> Vite dev server in mode "mock" with this mock (no backend needed)
-//   npm run dev          -> normal dev server, /api is proxied to the real backend
-//
-// Never part of `npm run build`. Rules follow the backend contract (US-01, US-02, US-03):
+// Mock of the backend's /api/auth and /api/me endpoints (see mock/mockApi.ts for how it is switched on).
+// Rules follow the backend contract (US-01, US-02, US-03):
 // tokens last 2 hours and log-out ends every session of that user;
 // 6-digit code valid 10 minutes, 5 wrong attempts, 60 s before a new code can be sent.
 // No e-mail is sent: every code is MOCK_OTP and is also printed in the terminal.
@@ -19,12 +13,14 @@ const RESEND_COOLDOWN_MS = 60_000
 const ALLOWED_DOMAINS = ['metu.edu.tr']
 
 type Status = 'PENDING_VERIFICATION' | 'ACTIVE' | 'DISABLED'
+export type Role = 'STUDENT' | 'CLUB_MANAGER' | 'UNIVERSITY_ADMIN' | 'SYSTEM_ADMIN'
 
-interface MockUser {
+export interface MockUser {
   id: number
   email: string
   password: string
   fullName: string
+  role: Role
   status: Status
   createdAt: string
   otp: { code: string; expiresAt: number; attempts: number; sentAt: number } | null
@@ -36,8 +32,10 @@ let nextId = 1
 const sessions = new Map<string, { email: string; expiresAt: number }>()
 const TOKEN_MS = 2 * 60 * 60 * 1000
 
-function addUser(email: string, password: string, fullName: string, status: Status) {
-  const user: MockUser = { id: nextId++, email, password, fullName, status, createdAt: new Date().toISOString(), otp: null }
+function addUser(email: string, password: string, fullName: string, status: Status, role: Role = 'STUDENT') {
+  const user: MockUser = {
+    id: nextId++, email, password, fullName, role, status, createdAt: new Date().toISOString(), otp: null,
+  }
   users.set(email, user)
   return user
 }
@@ -45,12 +43,7 @@ function addUser(email: string, password: string, fullName: string, status: Stat
 // Ready-made accounts for trying the screens.
 addUser('ayse.yilmaz@metu.edu.tr', 'Demo1234', 'Ayşe Yılmaz', 'ACTIVE')
 addUser('burak.celik@metu.edu.tr', 'Demo1234', 'Burak Çelik', 'PENDING_VERIFICATION')
-
-class ApiError extends Error {
-  constructor(readonly status: number, message: string, readonly fieldErrors: Record<string, string> = {}) {
-    super(message)
-  }
-}
+addUser('zeynep.demir@metu.edu.tr', 'Demo1234', 'Zeynep Demir', 'ACTIVE', 'UNIVERSITY_ADMIN')
 
 const normalize = (email: unknown) => String(email ?? '').trim().toLowerCase()
 
@@ -79,20 +72,19 @@ function pendingUser(rawEmail: unknown) {
 function profile(user: MockUser) {
   return {
     id: user.id, email: user.email, fullName: user.fullName, department: null, bio: null, interests: [],
-    role: 'STUDENT', status: user.status, createdAt: user.createdAt,
+    role: user.role, status: user.status, createdAt: user.createdAt,
   }
 }
 
-type Body = Record<string, unknown>
-
-function userForToken(token: string | null) {
+/** The signed-in user for a Bearer token, or 401. */
+export function userForToken(token: string | null) {
   const session = token ? sessions.get(token) : undefined
   const user = session && session.expiresAt > Date.now() ? users.get(session.email) : undefined
   if (!user || user.status !== 'ACTIVE') throw new ApiError(401, 'Your session has ended. Please log in again.')
   return user
 }
 
-const routes: Record<string, (body: Body, token: string | null) => unknown> = {
+export const authRoutes: Routes = {
   'POST /api/auth/register': (body) => {
     const email = normalize(body.email)
     const password = String(body.password ?? '')
@@ -169,58 +161,4 @@ const routes: Record<string, (body: Body, token: string | null) => unknown> = {
   },
 
   'GET /api/me': (_body, token) => profile(userForToken(token)),
-}
-
-function readBody(req: IncomingMessage): Promise<Body> {
-  return new Promise((resolve) => {
-    let raw = ''
-    req.on('data', (chunk) => (raw += chunk))
-    req.on('end', () => {
-      try {
-        resolve(raw ? JSON.parse(raw) : {})
-      } catch {
-        resolve({})
-      }
-    })
-  })
-}
-
-function send(res: ServerResponse, status: number, body: unknown) {
-  res.statusCode = status
-  res.setHeader('Content-Type', 'application/json')
-  res.end(JSON.stringify(body))
-}
-
-export function authMock(): Plugin {
-  return {
-    name: 'campushub-auth-mock',
-    apply: 'serve',
-    configureServer(server) {
-      server.config.logger.info('\n  [mock] Auth API mock is on. Every verification code is 123456.\n')
-      server.middlewares.use(async (req, res, next) => {
-        const path = (req.url ?? '').split('?')[0]
-        const handler = routes[`${req.method} ${path}`]
-        if (!handler) return next()
-        const auth = req.headers.authorization ?? ''
-        const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
-
-        await new Promise((r) => setTimeout(r, 300)) // feel like a real network call
-        try {
-          const result = handler(await readBody(req), token)
-          if (result === undefined) {
-            res.statusCode = 204
-            res.end()
-          } else {
-            send(res, 200, result)
-          }
-        } catch (error) {
-          if (error instanceof ApiError) {
-            send(res, error.status, { status: error.status, message: error.message, fieldErrors: error.fieldErrors })
-          } else {
-            send(res, 500, { status: 500, message: 'Mock server error.' })
-          }
-        }
-      })
-    },
-  }
 }

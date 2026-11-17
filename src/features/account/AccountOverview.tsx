@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { Role } from '@/features/auth/types'
-import { navigate } from '@/lib/router'
+import { Link, navigate } from '@/lib/router'
 import '@/features/account/account.css'
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -39,7 +39,7 @@ function AccountOverview() {
       <section className="account-hero">
         <span className="account-avatar" aria-hidden="true">{initials(user.fullName)}</span>
         <div>
-          <p className="account-kicker">My account</p>
+          <p className="account-kicker" lang="en">My account</p>
           <h1 className="account-name">Welcome, {user.fullName.split(' ')[0]}!</h1>
           <p className="account-sub">You are signed in to CampusHub.</p>
         </div>
@@ -63,10 +63,9 @@ function AccountOverview() {
         </section>
 
         <section className="account-card">
-          <h2>Coming soon</h2>
-          <p className="account-muted">
-            Your events, study groups and clubs will appear here as new CampusHub features arrive.
-          </p>
+          <h2>Campus events</h2>
+          <p className="account-muted">See what is happening on campus this week.</p>
+          <Link to="/events" className="button primary account-events-link">Browse events</Link>
           <h2 className="account-logout-title">Log out</h2>
           <p className="account-muted">
             Logging out ends your session on every device. You will need your password to come back.

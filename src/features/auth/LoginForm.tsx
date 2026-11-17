@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/features/auth/AuthContext'
-import { FormField, PasswordField } from '@/features/auth/FormField'
+import { FormField, PasswordField } from '@/components/FormField'
 import { validateLogin, type FieldErrors } from '@/features/auth/validation'
 import { HttpError } from '@/lib/http'
 import { getQueryParam, Link } from '@/lib/router'
