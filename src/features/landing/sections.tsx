@@ -1,5 +1,6 @@
 import { FEATURES, TEAM } from '@/features/landing/content'
 import '@/features/landing/landing.css'
+import { Link } from '@/lib/router'
 
 export function HeroSection() {
   return (
@@ -35,8 +36,8 @@ export function AboutSection() {
         ))}
       </ul>
       <div className="cta-row">
-        <a href="/register" className="button primary">Create your account</a>
-        <a href="/login" className="button">Log in</a>
+        <Link to="/signup" className="button primary">Create your account</Link>
+        <Link to="/login" className="button">Log in</Link>
       </div>
     </section>
   )
