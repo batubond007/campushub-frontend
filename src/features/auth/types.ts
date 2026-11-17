@@ -37,3 +37,12 @@ export interface RegisterResponse {
   message: string
   expiresInMinutes: number
 }
+
+export interface VerifyRequest {
+  email: string
+  code: string
+}
+
+export interface MessageResponse {
+  message: string
+}

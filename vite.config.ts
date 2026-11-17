@@ -1,11 +1,13 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { authMock } from './mock/authMock'
 
 // Static SPA build: `npm run build` emits plain HTML/JS/CSS into dist/,
 // which the CI pipeline copies to the web server / bucket as-is.
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => ({
+  // `npm run dev:mock` (mode "mock") answers /api/auth/* with a fake backend; see mock/authMock.ts.
+  plugins: [react(), ...(mode === 'mock' ? [authMock()] : [])],
   resolve: {
     // `@/` points at src/, so imports look like `@/lib/http` instead of `../../lib/http`.
     alias: {
@@ -28,4 +30,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

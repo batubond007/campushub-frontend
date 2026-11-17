@@ -3,15 +3,14 @@ import { register } from '@/features/auth/api'
 import { FormField, PasswordField } from '@/features/auth/FormField'
 import { passwordChecks, validateSignup, type FieldErrors } from '@/features/auth/validation'
 import { HttpError } from '@/lib/http'
-import { Link } from '@/lib/router'
+import { Link, navigate } from '@/lib/router'
 
-/** US-01: sign up with a university e-mail. The backend then e-mails a verification code (US-02). */
+/** US-01: sign up with a university e-mail. The backend e-mails a code, verified on /verify (US-02). */
 function SignupForm() {
   const [values, setValues] = useState({ fullName: '', email: '', password: '', confirmPassword: '' })
   const [errors, setErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [sentTo, setSentTo] = useState<string | null>(null)
 
   const update = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues((current) => ({ ...current, [field]: e.target.value }))
@@ -30,7 +29,7 @@ function SignupForm() {
         email: values.email.trim(),
         password: values.password,
       })
-      setSentTo(result.email)
+      navigate(`/verify?email=${encodeURIComponent(result.email)}&sent=1`)
     } catch (error) {
       if (error instanceof HttpError) {
         setErrors(error.fieldErrors)
@@ -41,19 +40,6 @@ function SignupForm() {
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (sentTo) {
-    return (
-      <div className="auth-success" role="status">
-        <p className="auth-success-title">Check your inbox</p>
-        <p>
-          We sent a 6-digit verification code to <strong>{sentTo}</strong>. It is valid for 10 minutes.
-          Verify your e-mail, then log in.
-        </p>
-        <Link to="/login" className="button primary auth-submit">Go to log in</Link>
-      </div>
-    )
   }
 
   return (

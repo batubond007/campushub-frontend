@@ -45,3 +45,8 @@ export function Link({ to, onClick, ...rest }: LinkProps) {
 
   return <a href={to} onClick={handleClick} {...rest} />
 }
+
+/** Reads one value from the current URL's query string, e.g. getQueryParam('email') for /verify?email=… */
+export function getQueryParam(name: string) {
+  return new URLSearchParams(window.location.search).get(name)
+}

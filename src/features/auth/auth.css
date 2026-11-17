@@ -210,3 +210,95 @@
   font-size: 1.1rem;
   color: var(--success);
 }
+
+/* Verification (US-02) */
+.form-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.form-info,
+.form-success {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.form-info {
+  background: #eaf3f8;
+  color: var(--text);
+}
+
+.form-success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.form-alert a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.verify-email {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.otp-input {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.otp-input input {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.otp-input input:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.otp-input input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.otp-input input:disabled {
+  opacity: 0.6;
+}
+
+.link-button {
+  font: inherit;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resend-wait {
+  font-variant-numeric: tabular-nums;
+}
