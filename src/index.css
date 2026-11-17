@@ -7,6 +7,10 @@
   --primary: #2e86ab;
   --primary-dark: #236b8a;
   --odtu-red: #c8102e;
+  --error: #a2271b;
+  --error-bg: #fdecea;
+  --success: #1f6b45;
+  --success-bg: #e8f5ee;
   --radius: 10px;
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

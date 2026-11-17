@@ -1,4 +1,5 @@
 import '@/components/NavBar.css'
+import { Link } from '@/lib/router'
 
 const SECTIONS = [
   { id: 'about', label: 'About' },
@@ -7,23 +8,22 @@ const SECTIONS = [
 ]
 
 // Top navigation bar, shared by every page.
-// TODO: point Log in / Sign up at the auth pages once client-side routing is added.
 function NavBar() {
   return (
     <header className="nav">
       <div className="nav-inner">
-        <a href="/" className="brand">
+        <Link to="/" className="brand">
           Campus<span className="brand-accent">Hub</span>
-        </a>
+        </Link>
         <nav aria-label="Main" className="nav-links">
           {SECTIONS.map((section) => (
-            <a key={section.id} href={`#${section.id}`} className="nav-link">
+            <a key={section.id} href={`/#${section.id}`} className="nav-link">
               {section.label}
             </a>
           ))}
           <span className="nav-auth">
-            <a href="/login" className="button">Log in</a>
-            <a href="/register" className="button primary">Sign up</a>
+            <Link to="/login" className="button">Log in</Link>
+            <Link to="/signup" className="button primary">Sign up</Link>
           </span>
         </nav>
       </div>
