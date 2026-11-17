@@ -4,11 +4,14 @@ import { FormField, PasswordField } from '@/features/auth/FormField'
 import { saveSession } from '@/features/auth/session'
 import { validateLogin, type FieldErrors } from '@/features/auth/validation'
 import { HttpError } from '@/lib/http'
-import { Link, navigate } from '@/lib/router'
+import { getQueryParam, Link, navigate } from '@/lib/router'
 
 /** US-03: log in with university e-mail and password. */
 function LoginForm() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(getQueryParam('email') ?? '')
+  const [verified] = useState(getQueryParam('verified') === '1')
+  // Set when the backend says the account is not verified yet, to offer the way back to /verify.
+  const [needsVerification, setNeedsVerification] = useState(false)
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -17,6 +20,7 @@ function LoginForm() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setFormError(null)
+    setNeedsVerification(false)
     const found = validateLogin(email, password)
     setErrors(found)
     if (Object.keys(found).length > 0) return
@@ -29,6 +33,7 @@ function LoginForm() {
       if (error instanceof HttpError) {
         setErrors(error.fieldErrors)
         setFormError(error.message)
+        setNeedsVerification(error.status === 403 && /verify/i.test(error.message))
       } else {
         setFormError('Something went wrong. Please try again.')
       }
@@ -39,7 +44,20 @@ function LoginForm() {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
-      {formError && <p className="form-alert" role="alert">{formError}</p>}
+      {verified && !formError && (
+        <p className="form-success" role="status">Your e-mail is verified. You can log in now.</p>
+      )}
+      {formError && (
+        <p className="form-alert" role="alert">
+          {formError}
+          {needsVerification && (
+            <>
+              {' '}
+              <Link to={`/verify?email=${encodeURIComponent(email.trim())}`}>Verify your e-mail</Link>
+            </>
+          )}
+        </p>
+      )}
 
       <FormField
         id="email"
