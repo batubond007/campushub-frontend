@@ -42,7 +42,11 @@ function addUser(email: string, password: string, fullName: string, status: Stat
 
 // Ready-made accounts for trying the screens.
 addUser('ayse.yilmaz@metu.edu.tr', 'Demo1234', 'Ayşe Yılmaz', 'ACTIVE')
-addUser('burak.celik@metu.edu.tr', 'Demo1234', 'Burak Çelik', 'PENDING_VERIFICATION')
+// Burak "already got" a code, so 123456 works right away. It never expires and sentAt is 0,
+// so "Send a new code" is not blocked by the 60 s cooldown either.
+addUser('burak.celik@metu.edu.tr', 'Demo1234', 'Burak Çelik', 'PENDING_VERIFICATION').otp = {
+  code: MOCK_OTP, expiresAt: Number.POSITIVE_INFINITY, attempts: 0, sentAt: 0,
+}
 addUser('zeynep.demir@metu.edu.tr', 'Demo1234', 'Zeynep Demir', 'ACTIVE', 'UNIVERSITY_ADMIN')
 
 const normalize = (email: unknown) => String(email ?? '').trim().toLowerCase()

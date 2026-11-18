@@ -2,8 +2,16 @@
 
 Static React (Vite + TypeScript) single-page app.
 
-## Mock Accounts:
-Mock Accounts (password: Demo1234): ayse.yilmaz@metu.edu.tr verified, burak.celik@metu.edu.tr not verified, zeynep.demir@metu.edu.tr University Admin (can create events). Verification code: 123456 Do not copy-paste!
+## Mock accounts
+Only with `npm run dev:mock` (see "Without the backend" below). Password for all: `Demo1234`.
+
+| E-mail                     | Account                                   |
+|----------------------------|-------------------------------------------|
+| `ayse.yilmaz@metu.edu.tr`  | Verified student                          |
+| `burak.celik@metu.edu.tr`  | Not verified yet: log in, then verify     |
+| `zeynep.demir@metu.edu.tr` | University Admin (can create events)      |
+
+Verification code: `123456`.
 
 ## Visuals
 <img width="1612" height="1074" alt="18 Robotics Demo Day" src="https://github.com/user-attachments/assets/a7f9c14a-e3d5-4e4b-b151-6ca4dff68b6f" />
