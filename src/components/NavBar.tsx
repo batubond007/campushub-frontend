@@ -4,8 +4,8 @@ import { Link, navigate } from '@/lib/router'
 
 const SECTIONS = [
   { id: 'about', label: 'About' },
-  { id: 'university', label: 'ODTÜ' },
-  { id: 'team', label: 'Team' },
+  { id: 'university', label: 'Partners' },
+  { id: 'team', label: 'Us' },
 ]
 
 // Top navigation bar, shared by every page.

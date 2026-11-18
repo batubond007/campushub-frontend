@@ -54,6 +54,7 @@ export function AboutSection() {
 export function UniversitySection() {
   return (
     <section id="university" className="landing-section">
+      <p className="eyebrow" lang="en">Partners</p>
       <div className="university-card">
         <div className="university-badge" aria-hidden="true">ODTÜ</div>
         <div>
@@ -76,7 +77,7 @@ function initials(name: string) {
 export function TeamSection() {
   return (
     <section id="team" className="landing-section">
-      <p className="eyebrow" lang="en">Team</p>
+      <p className="eyebrow" lang="en">Us</p>
       <h2 className="landing-title">The people behind CampusHub</h2>
       <ul className="team-grid">
         {TEAM.map((name) => (
@@ -93,7 +94,7 @@ export function TeamSection() {
 export function LandingFooter() {
   return (
     <footer className="landing-footer muted">
-      © {new Date().getFullYear()} CampusHub · Made for ODTÜ students
+      © {new Date().getFullYear()} CampusHub
     </footer>
   )
 }

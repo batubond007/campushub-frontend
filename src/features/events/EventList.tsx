@@ -34,7 +34,7 @@ function EventList() {
         <div>
           <p className="events-kicker" lang="en">Campus events</p>
           <h1 className="events-title">Upcoming events</h1>
-          <p className="events-sub">Official ODTÜ events, soonest first.</p>
+          <p className="events-sub">Official campus events, soonest first.</p>
         </div>
         {user?.role === 'UNIVERSITY_ADMIN' && (
           <Link to="/events/new" className="button primary">+ Create event</Link>
