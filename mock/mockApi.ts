@@ -62,7 +62,11 @@ export function mockApi(): Plugin {
         const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
 
         const setCookies: string[] = []
-        const ctx = { cookies: parseCookies(req.headers.cookie), setCookie: (c: string) => setCookies.push(c) }
+        const ctx = {
+          query: new URLSearchParams((req.url ?? '').split('?')[1] ?? ''),
+          cookies: parseCookies(req.headers.cookie),
+          setCookie: (c: string) => setCookies.push(c),
+        }
 
         await new Promise((r) => setTimeout(r, 300)) // feel like a real network call
         try {

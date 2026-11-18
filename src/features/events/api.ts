@@ -4,9 +4,9 @@ import { http } from '@/lib/http'
 // All event calls are made as the signed-in user ({ auth: true }): http() adds the access token
 // and refreshes it when needed.
 
-/** Upcoming events, soonest first. */
-export function listEvents() {
-  return http<Page<CampusEvent>>('/api/events?page=0&size=50', undefined, { auth: true })
+/** One page of upcoming events, soonest first. `page` counts from 0 (like Spring's Pageable). */
+export function listEvents(page: number, size: number) {
+  return http<Page<CampusEvent>>(`/api/events?page=${page}&size=${size}`, undefined, { auth: true })
 }
 
 /** One event with everything the detail page shows (US-06). 404 when it does not exist. */

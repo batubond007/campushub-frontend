@@ -66,6 +66,43 @@ const events: MockEvent[] = [
     organizerName: 'ODTÜ Medical Centre',
   },
   {
+    title: 'ODTÜ Spring Festival',
+    description:
+      'Three days of concerts, club stands and food trucks on the Devrim Stadium grounds.\n\n' +
+      'Concerts run until late every night; the festival area opens at 12:00 each day.',
+    location: 'Devrim Stadium', startTime: at(15, 12), endTime: at(17, 23.5), organizerName: 'ODTÜ Culture Office',
+  },
+  {
+    title: 'Hackathon: Campus Apps',
+    description:
+      'A 24-hour hackathon: build an app that makes campus life easier. Teams of 2–4, mentors on site all night.\n\n' +
+      'Food and drinks are provided. Bring your laptop and charger.',
+    location: 'Computer Engineering Building, A101', startTime: at(20, 18), endTime: at(21, 18),
+    organizerName: 'ODTÜ Computer Engineering',
+  },
+  // A few more, so the list has several pages to try paging with.
+  ...[
+    ['Chess Tournament', 'Student Centre, Room 3', 3, 13, 17],
+    ['Photography Walk', 'Eymir Lake', 5, 9, 12],
+    ['Startup Pitch Night', 'Technopolis, Hall 1', 7, 18, 21],
+    ['Blood Donation Day', 'Medical Centre', 8, 10, 16],
+    ['Debate Club Open Session', 'Faculty of Arts, Room 210', 10, 17, 19],
+    ['Robotics Demo Day', 'Mechanical Engineering, Hangar', 11, 13, 17],
+    ['Turkish Folk Dance Show', 'Kültür ve Kongre Merkezi, Main Hall', 13, 19, 21],
+    ['Climbing Wall Taster', 'Sports Centre', 14, 15, 17],
+    ['Data Science Meetup', 'Library, Seminar Room 1', 16, 18, 20],
+    ['Campus Clean-up', 'Main Gate (A1)', 18, 10, 13],
+    ['Film Night: Classic Turkish Cinema', 'Faculty of Architecture, Auditorium', 19, 20, 22.5],
+    ['Graduate Study Abroad Info Session', 'Online (link shared with registered students)', 22, 14, 15],
+  ].map(([title, location, day, from, to]) => ({
+    title: String(title),
+    description: `${title} at ${location}. Open to all ODTÜ students.`,
+    location: String(location),
+    startTime: at(Number(day), Number(from)),
+    endTime: at(Number(day), Number(to)),
+    organizerName: 'ODTÜ Student Affairs',
+  })),
+  {
     title: 'Orientation Day (past)',
     description: 'This event has already ended, so it does not appear in the upcoming list.',
     location: 'Kültür ve Kongre Merkezi', startTime: at(-3, 10), endTime: at(-3, 16), organizerName: 'ODTÜ Student Affairs',
@@ -81,15 +118,35 @@ function details(event: MockEvent) {
 }
 
 const LIMITS = { title: 120, description: 2000, location: 200 } as const
+const DEFAULT_PAGE_SIZE = 10
+const MAX_PAGE_SIZE = 50
 
 export const eventRoutes: Routes = {
-  'GET /api/events': (_body, token) => {
+  // ?page= counts from 0 and ?size= is 1–50 (defaults 0 and 10), like Spring's Pageable.
+  // A page past the end is not an error: it just has no content.
+  'GET /api/events': (_body, token, _params, ctx) => {
     userForToken(token)
+    const rawPage = ctx.query.get('page') ?? '0'
+    const rawSize = ctx.query.get('size') ?? String(DEFAULT_PAGE_SIZE)
+    const page = Number(rawPage)
+    const size = Number(rawSize)
+    const errors: Record<string, string> = {}
+    if (!Number.isInteger(page) || page < 0) errors.page = 'page must be a whole number, 0 or more.'
+    if (!Number.isInteger(size) || size < 1 || size > MAX_PAGE_SIZE) {
+      errors.size = `size must be a whole number from 1 to ${MAX_PAGE_SIZE}.`
+    }
+    if (Object.keys(errors).length) throw new ApiError(400, 'VALIDATION_FAILED', 'Invalid paging parameters.', errors)
+
     const upcoming = events
       .filter((event) => Date.parse(event.endTime) > Date.now())
       .sort((a, b) => Date.parse(a.startTime) - Date.parse(b.startTime))
-      .map(summary)
-    return { content: upcoming, page: 0, size: upcoming.length, totalElements: upcoming.length, totalPages: 1 }
+    return {
+      content: upcoming.slice(page * size, page * size + size).map(summary),
+      page,
+      size,
+      totalElements: upcoming.length,
+      totalPages: Math.ceil(upcoming.length / size),
+    }
   },
 
   'GET /api/events/:id': (_body, token, params) => {

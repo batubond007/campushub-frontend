@@ -18,8 +18,9 @@ export class ApiError extends Error {
 
 export type Body = Record<string, unknown>
 
-/** Request cookies, and a way to add a Set-Cookie header to the response. */
-export interface CookieContext {
+/** Query string and cookies of the request, and a way to add a Set-Cookie header to the response. */
+export interface RequestContext {
+  query: URLSearchParams
   cookies: Record<string, string>
   setCookie: (cookie: string) => void
 }
@@ -30,7 +31,7 @@ export interface CookieContext {
  */
 export type Routes = Record<
   string,
-  (body: Body, token: string | null, params: Record<string, string>, ctx: CookieContext) => unknown
+  (body: Body, token: string | null, params: Record<string, string>, ctx: RequestContext) => unknown
 >
 
 /** Finds the handler for a request, e.g. "GET /api/events/4" matches "GET /api/events/:id". */

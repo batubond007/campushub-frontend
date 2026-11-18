@@ -2,30 +2,62 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/features/auth/AuthContext'
 import { listEvents } from '@/features/events/api'
 import EventCard from '@/features/events/EventCard'
-import type { CampusEvent } from '@/features/events/types'
+import Pagination from '@/features/events/Pagination'
+import type { CampusEvent, Page } from '@/features/events/types'
 import { HttpError } from '@/lib/http'
-import { getQueryParam, Link } from '@/lib/router'
+import { Link, navigate, useSearch } from '@/lib/router'
 import '@/features/events/events.css'
 
-/** Upcoming campus events, soonest first. A University Admin also gets a Create event button. */
+const PAGE_SIZES = [5, 10, 20, 50] as const
+const DEFAULT_SIZE = 10
+
+/**
+ * Paging lives in the address (/events?page=2&size=20, page counted from 1), so Back/Forward, reload
+ * and shared links keep the page. Anything invalid falls back to page 1 / the default size.
+ */
+function readQuery(search: string) {
+  const params = new URLSearchParams(search)
+  const page = Math.floor(Number(params.get('page')))
+  const size = Number(params.get('size'))
+  return {
+    page: page >= 1 ? page : 1,
+    size: (PAGE_SIZES as readonly number[]).includes(size) ? size : DEFAULT_SIZE,
+    createdId: Number(params.get('created')) || null,
+  }
+}
+
+const hrefFor = (page: number, size: number) => `/events?page=${page}&size=${size}`
+
+/** Upcoming campus events, soonest first, one page at a time. A University Admin also gets a Create event button. */
 function EventList() {
   const { user } = useAuth()
-  const [events, setEvents] = useState<CampusEvent[] | null>(null)
+  const { page, size, createdId } = readQuery(useSearch())
+  const [result, setResult] = useState<Page<CampusEvent> | null>(null)
   const [error, setError] = useState<string | null>(null)
-  // /events?created=<id> is opened right after creating an event: show a message and mark that card.
-  const [createdId] = useState(() => Number(getQueryParam('created')) || null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-    listEvents()
-      .then((page) => !cancelled && setEvents(page.content))
+    setLoading(true)
+    setError(null)
+    listEvents(page - 1, size) // the API counts pages from 0
+      .then((data) => {
+        if (cancelled) return
+        // Past the last page (e.g. an old link, or events have ended): go to the last page that exists.
+        if (data.totalPages > 0 && page > data.totalPages) {
+          navigate(hrefFor(data.totalPages, size), { replace: true })
+          return
+        }
+        setResult(data)
+      })
       .catch((e) => !cancelled && setError(e instanceof HttpError ? e.message : 'Could not load events.'))
+      .finally(() => !cancelled && setLoading(false))
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [page, size])
 
-  const created = events?.find((event) => event.id === createdId)
+  const events = result?.content
 
   return (
     <div className="events">
@@ -40,21 +72,34 @@ function EventList() {
         )}
       </header>
 
-      {created && (
+      {/* /events?created=<id> is opened right after creating an event. It may be on another page. */}
+      {createdId && (
         <p className="form-success" role="status">
-          “{created.title}” was created and is now in the event list.
+          Your event was created. <Link to={`/events/${createdId}`}>View event</Link>
         </p>
       )}
       {error && <p className="form-alert" role="alert">{error}</p>}
 
-      {!events && !error && <p className="events-empty">Loading events…</p>}
+      {!result && !error && <p className="events-empty">Loading events…</p>}
       {events && events.length === 0 && <p className="events-empty">There are no upcoming events yet.</p>}
       {events && events.length > 0 && (
-        <ul className="event-list">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} highlight={event.id === createdId} />
-          ))}
-        </ul>
+        <>
+          <ul className="event-list" aria-busy={loading}>
+            {events.map((event) => (
+              <EventCard key={event.id} event={event} highlight={event.id === createdId} />
+            ))}
+          </ul>
+          <Pagination
+            page={page}
+            totalPages={result.totalPages}
+            size={size}
+            sizes={PAGE_SIZES}
+            totalElements={result.totalElements}
+            hrefFor={hrefFor}
+            // A new page size starts again at page 1.
+            onSizeChange={(newSize) => navigate(hrefFor(1, newSize))}
+          />
+        </>
       )}
     </div>
   )

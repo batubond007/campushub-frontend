@@ -33,6 +33,27 @@ export function usePath() {
   return path
 }
 
+/**
+ * The current query string (e.g. "?page=2&size=10"), updated like usePath(). Use it when a page must
+ * re-render as its query changes, e.g. paging; getQueryParam() only reads the value once.
+ */
+export function useSearch() {
+  const [search, setSearch] = useState(window.location.search)
+
+  useEffect(() => {
+    const update = () => setSearch(window.location.search)
+    window.addEventListener('popstate', update)
+    window.addEventListener(NAVIGATE_EVENT, update)
+    update()
+    return () => {
+      window.removeEventListener('popstate', update)
+      window.removeEventListener(NAVIGATE_EVENT, update)
+    }
+  }, [])
+
+  return search
+}
+
 type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & { to: string }
 
 /** An <a> that changes page without reloading. Ctrl/Cmd-click still opens a new tab. */

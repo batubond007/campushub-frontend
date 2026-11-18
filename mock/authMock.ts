@@ -1,4 +1,4 @@
-import { ApiError, type CookieContext, type Routes } from './shared'
+import { ApiError, type RequestContext, type Routes } from './shared'
 
 // Mock of the backend's /api/auth and /api/me endpoints (see mock/mockApi.ts for how it is switched on).
 // Rules follow the backend contract (US-01, US-02, US-03):
@@ -43,14 +43,14 @@ const refreshTokens = new Map<string, { email: string; expiresAt: number; used: 
 
 const randomToken = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
 
-function setRefreshCookie(ctx: CookieContext, token: string) {
+function setRefreshCookie(ctx: RequestContext, token: string) {
   // Production adds `Secure`; Path keeps the cookie off every request except /api/auth/*.
   ctx.setCookie(
     `${REFRESH_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=${REFRESH_TOKEN_MS / 1000}`,
   )
 }
 
-function clearRefreshCookie(ctx: CookieContext) {
+function clearRefreshCookie(ctx: RequestContext) {
   ctx.setCookie(`${REFRESH_COOKIE}=; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=0`)
 }
 
@@ -61,7 +61,7 @@ function revokeAll(email: string) {
 }
 
 /** A new access token in the body and a new refresh token in the cookie. */
-function issueTokens(user: MockUser, ctx: CookieContext) {
+function issueTokens(user: MockUser, ctx: RequestContext) {
   const now = Date.now()
   const accessToken = randomToken('access')
   accessTokens.set(accessToken, { email: user.email, expiresAt: now + ACCESS_TOKEN_MS })

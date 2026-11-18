@@ -87,6 +87,13 @@ In the frontend:
 - The API must be **same-origin** (`/api` behind nginx, or the Vite proxy in development), so the cookie is sent
   and `SameSite=Strict` protects `/refresh` and `/logout` against CSRF.
 
+## Paging
+List endpoints use Spring's `Pageable` conventions: `GET /api/events?page=0&size=10`
+(`page` counts from 0, `size` 1–50, defaults 0 and 10; invalid values → `400 VALIDATION_FAILED`).
+The answer is `{ content: [...], page, size, totalElements, totalPages }`; a page past the end has empty `content`.
+In the app the address shows the page counted from 1 (`/events?page=2&size=20`), so Back/Forward, reload and
+shared links keep the page.
+
 ## API errors
 Every non-2xx response is an RFC 9457 Problem Details body (Spring `ProblemDetail`,
 `Content-Type: application/problem+json`) with two extra members:
