@@ -49,7 +49,7 @@ const normalize = (email: unknown) => String(email ?? '').trim().toLowerCase()
 
 function isAllowedDomain(email: string) {
   const domain = email.split('@')[1] ?? ''
-  return ALLOWED_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))
+  return ALLOWED_DOMAINS.includes(domain)
 }
 
 function sendCode(user: MockUser) {

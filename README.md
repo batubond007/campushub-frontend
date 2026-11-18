@@ -70,7 +70,10 @@ In CI, prefer `npm ci` over `npm install` (requires the committed `package-lock.
 ### Hosting notes
 - Files under `assets/` have content hashes in their names and can be cached forever
   (`Cache-Control: public, max-age=31536000, immutable`); `index.html` should be `no-cache`.
-- If client-side routing is added later, the server must fall back to `index.html` for unknown paths.
+- The app uses client-side routing (`/login`, `/events/12`, ...), so the server must answer unknown paths
+  with `index.html`. The production nginx config already does this
+  (`try_files $uri $uri/ /index.html;` in `campushub-backend/deploy/nginx-campushub.conf`);
+  Vite's dev and preview servers do it too.
 
 ## Configuration
 Build-time env vars (see `.env.example`):

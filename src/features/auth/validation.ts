@@ -7,9 +7,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export type FieldErrors = Partial<Record<'fullName' | 'email' | 'password' | 'confirmPassword', string>>
 
+/** Exact domain match only: name@metu.edu.tr is accepted, name@ceng.metu.edu.tr is not. */
 export function isUniversityEmail(email: string) {
   const domain = email.trim().toLowerCase().split('@')[1] ?? ''
-  return ALLOWED_DOMAINS.some((allowed) => domain === allowed || domain.endsWith(`.${allowed}`))
+  return ALLOWED_DOMAINS.includes(domain)
 }
 
 export function passwordChecks(password: string) {
