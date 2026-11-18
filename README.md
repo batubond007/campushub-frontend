@@ -63,6 +63,30 @@ Rules of thumb:
 - **Start inside the feature;** move something to `components/` or `lib/` only once a second feature needs it.
 - Add sub-folders (e.g. `features/events/components/`) only when a feature grows to many files.
 
+## API errors
+Every non-2xx response is an RFC 9457 Problem Details body (Spring `ProblemDetail`,
+`Content-Type: application/problem+json`) with two extra members:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "Please check the highlighted fields.",
+  "instance": "/api/auth/register",
+  "code": "VALIDATION_FAILED",
+  "fieldErrors": { "password": "Password must be at least 8 characters with a letter and a number." }
+}
+```
+
+- `detail`: text shown to the user. 500 responses have no `detail` (nothing internal leaks out).
+- `code`: stable, machine-readable reason. The full list is `src/lib/errorCodes.ts`.
+  The frontend decides what to do from `status` + `code`, **never from the `detail` text**.
+- `fieldErrors`: only for validation errors, keyed by the request field name (`email`, `password`, ...),
+  so each message appears under the matching form field.
+
+`http()` turns this into an `HttpError` with `status`, `code`, `fieldErrors` and `message` (= `detail`).
+
 ## Build
 ```bash
 npm run build      # type-checks, then writes static files to dist/

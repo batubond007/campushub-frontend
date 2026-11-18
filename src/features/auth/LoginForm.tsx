@@ -38,7 +38,7 @@ function LoginForm() {
       if (error instanceof HttpError) {
         setErrors(error.fieldErrors)
         setFormError(error.message)
-        setNeedsVerification(error.status === 403 && /verify/i.test(error.message))
+        setNeedsVerification(error.code === 'EMAIL_NOT_VERIFIED')
       } else {
         setFormError('Something went wrong. Please try again.')
       }

@@ -1,8 +1,18 @@
 // Small helpers shared by the mock API files.
+import type { ErrorCode } from '../src/lib/errorCodes'
 
+/**
+ * Thrown by a mock handler; mockApi.ts turns it into a Problem Details body, the same shape as the
+ * backend's Spring ProblemDetail: { type, title, status, detail, instance, code, fieldErrors? }.
+ */
 export class ApiError extends Error {
-  constructor(readonly status: number, message: string, readonly fieldErrors: Record<string, string> = {}) {
-    super(message)
+  constructor(
+    readonly status: number,
+    readonly code: ErrorCode,
+    detail: string,
+    readonly fieldErrors: Record<string, string> = {},
+  ) {
+    super(detail)
   }
 }
 

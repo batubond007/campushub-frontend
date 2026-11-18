@@ -95,14 +95,14 @@ export const eventRoutes: Routes = {
   'GET /api/events/:id': (_body, token, params) => {
     userForToken(token)
     const event = events.find((e) => e.id === Number(params.id))
-    if (!event) throw new ApiError(404, 'This event could not be found. It may have been removed.')
+    if (!event) throw new ApiError(404, 'NOT_FOUND', 'This event could not be found. It may have been removed.')
     return details(event)
   },
 
   'POST /api/events': (body, token) => {
     const user = userForToken(token)
     if (user.role !== 'UNIVERSITY_ADMIN') {
-      throw new ApiError(403, 'Only a University Admin can create campus events.')
+      throw new ApiError(403, 'FORBIDDEN', 'Only a University Admin can create campus events.')
     }
 
     const errors: Record<string, string> = {}
@@ -122,7 +122,9 @@ export const eventRoutes: Routes = {
     else if (start <= Date.now()) errors.startTime = 'Start time must be in the future.'
     if (Number.isNaN(end)) errors.endTime = 'End time is required.'
     else if (!Number.isNaN(start) && end <= start) errors.endTime = 'End time must be after the start time.'
-    if (Object.keys(errors).length) throw new ApiError(400, 'Please check the highlighted fields.', errors)
+    if (Object.keys(errors).length) {
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Please check the highlighted fields.', errors)
+    }
 
     const event: MockEvent = {
       id: nextId++, title, description, location,

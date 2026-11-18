@@ -60,7 +60,7 @@ function sendCode(user: MockUser) {
   const now = Date.now()
   if (user.otp && now < user.otp.sentAt + RESEND_COOLDOWN_MS) {
     const wait = Math.ceil((user.otp.sentAt + RESEND_COOLDOWN_MS - now) / 1000)
-    throw new ApiError(429, `Please wait ${wait} seconds before requesting a new code.`)
+    throw new ApiError(429, 'OTP_COOLDOWN', `Please wait ${wait} seconds before requesting a new code.`)
   }
   user.otp = { code: MOCK_OTP, expiresAt: now + OTP_MINUTES * 60_000, attempts: 0, sentAt: now }
   console.log(`\n  [mock] Verification code for ${user.email}: ${MOCK_OTP}\n`)
@@ -68,8 +68,10 @@ function sendCode(user: MockUser) {
 
 function pendingUser(rawEmail: unknown) {
   const user = users.get(normalize(rawEmail))
-  if (!user) throw new ApiError(400, 'There is no sign-up waiting for this e-mail.')
-  if (user.status !== 'PENDING_VERIFICATION') throw new ApiError(409, 'This account is already verified. Please log in.')
+  if (!user) throw new ApiError(400, 'SIGNUP_NOT_FOUND', 'There is no sign-up waiting for this e-mail.')
+  if (user.status !== 'PENDING_VERIFICATION') {
+    throw new ApiError(409, 'ALREADY_VERIFIED', 'This account is already verified. Please log in.')
+  }
   return user
 }
 
@@ -84,7 +86,9 @@ function profile(user: MockUser) {
 export function userForToken(token: string | null) {
   const session = token ? sessions.get(token) : undefined
   const user = session && session.expiresAt > Date.now() ? users.get(session.email) : undefined
-  if (!user || user.status !== 'ACTIVE') throw new ApiError(401, 'Your session has ended. Please log in again.')
+  if (!user || user.status !== 'ACTIVE') {
+    throw new ApiError(401, 'UNAUTHENTICATED', 'Your session has ended. Please log in again.')
+  }
   return user
 }
 
@@ -99,14 +103,17 @@ export const authRoutes: Routes = {
       errors.password = 'Password must be at least 8 characters with a letter and a number.'
     }
     if (!fullName) errors.fullName = 'Full name is required.'
-    if (Object.keys(errors).length) throw new ApiError(400, 'Please check the highlighted fields.', errors)
+    if (Object.keys(errors).length) {
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Please check the highlighted fields.', errors)
+    }
     if (!isAllowedDomain(email)) {
-      throw new ApiError(400, `Please sign up with your university e-mail address (${ALLOWED_DOMAINS.join(', ')}).`)
+      const detail = `Please sign up with your university e-mail address (@${ALLOWED_DOMAINS.join(', @')}).`
+      throw new ApiError(400, 'EMAIL_DOMAIN_NOT_ALLOWED', detail, { email: detail })
     }
 
     let user = users.get(email)
     if (user && user.status !== 'PENDING_VERIFICATION') {
-      throw new ApiError(409, 'An account with this e-mail already exists. Please log in.')
+      throw new ApiError(409, 'EMAIL_TAKEN', 'An account with this e-mail already exists. Please log in.')
     }
     if (!user) user = addUser(email, password, fullName, 'PENDING_VERIFICATION')
     else Object.assign(user, { password, fullName })
@@ -117,19 +124,19 @@ export const authRoutes: Routes = {
   'POST /api/auth/verify': (body) => {
     const code = String(body.code ?? '')
     if (!/^\d{6}$/.test(code)) {
-      throw new ApiError(400, 'Please check the highlighted fields.', { code: 'The code has 6 digits.' })
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Please check the highlighted fields.', { code: 'The code has 6 digits.' })
     }
     const user = pendingUser(body.email)
     const otp = user.otp
-    if (!otp) throw new ApiError(400, 'There is no active code. Please request a new one.')
-    if (Date.now() > otp.expiresAt) throw new ApiError(400, 'This code has expired. Please request a new one.')
-    if (otp.attempts >= MAX_ATTEMPTS) throw new ApiError(400, 'Too many wrong attempts. Please request a new code.')
+    const tooMany = 'Too many wrong attempts. Please request a new code.'
+    if (!otp) throw new ApiError(400, 'OTP_NOT_FOUND', 'There is no active code. Please request a new one.')
+    if (Date.now() > otp.expiresAt) throw new ApiError(400, 'OTP_EXPIRED', 'This code has expired. Please request a new one.')
+    if (otp.attempts >= MAX_ATTEMPTS) throw new ApiError(400, 'OTP_TOO_MANY_ATTEMPTS', tooMany)
     if (code !== otp.code) {
       otp.attempts += 1
       const left = MAX_ATTEMPTS - otp.attempts
-      throw new ApiError(400, left > 0
-        ? `The code is not correct. Attempts left: ${left}.`
-        : 'Too many wrong attempts. Please request a new code.')
+      if (left <= 0) throw new ApiError(400, 'OTP_TOO_MANY_ATTEMPTS', tooMany)
+      throw new ApiError(400, 'OTP_INVALID', `The code is not correct. Attempts left: ${left}.`)
     }
     user.otp = null
     user.status = 'ACTIVE'
@@ -144,13 +151,13 @@ export const authRoutes: Routes = {
   'POST /api/auth/login': (body) => {
     const user = users.get(normalize(body.email))
     if (!user || user.password !== String(body.password ?? '')) {
-      throw new ApiError(401, 'E-mail or password is incorrect.')
+      throw new ApiError(401, 'BAD_CREDENTIALS', 'E-mail or password is incorrect.')
     }
     if (user.status === 'PENDING_VERIFICATION') {
-      throw new ApiError(403, 'Please verify your e-mail address before logging in.')
+      throw new ApiError(403, 'EMAIL_NOT_VERIFIED', 'Please verify your e-mail address before logging in.')
     }
     if (user.status === 'DISABLED') {
-      throw new ApiError(403, 'This account has been disabled. Please contact the administrator.')
+      throw new ApiError(403, 'ACCOUNT_DISABLED', 'This account has been disabled. Please contact the administrator.')
     }
     const token = `mock-${user.id}-${Math.random().toString(36).slice(2)}`
     const expiresAt = Date.now() + TOKEN_MS

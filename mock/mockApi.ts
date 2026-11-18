@@ -1,4 +1,4 @@
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import { STATUS_CODES, type IncomingMessage, type ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { authRoutes } from './authMock'
 import { eventRoutes } from './eventsMock'
@@ -27,10 +27,16 @@ function readBody(req: IncomingMessage): Promise<Body> {
   })
 }
 
-function send(res: ServerResponse, status: number, body: unknown) {
+function send(res: ServerResponse, status: number, body: unknown, contentType = 'application/json') {
   res.statusCode = status
-  res.setHeader('Content-Type', 'application/json')
+  res.setHeader('Content-Type', contentType)
   res.end(JSON.stringify(body))
+}
+
+/** An error response shaped like Spring's ProblemDetail (RFC 9457) plus our `code` / `fieldErrors` members. */
+function sendProblem(res: ServerResponse, path: string, status: number, extra: Record<string, unknown>) {
+  const problem = { type: 'about:blank', title: STATUS_CODES[status] ?? 'Error', status, instance: path, ...extra }
+  send(res, status, problem, 'application/problem+json')
 }
 
 export function mockApi(): Plugin {
@@ -57,9 +63,12 @@ export function mockApi(): Plugin {
           }
         } catch (error) {
           if (error instanceof ApiError) {
-            send(res, error.status, { status: error.status, message: error.message, fieldErrors: error.fieldErrors })
+            const fieldErrors = Object.keys(error.fieldErrors).length ? { fieldErrors: error.fieldErrors } : {}
+            sendProblem(res, path, error.status, { detail: error.message, code: error.code, ...fieldErrors })
           } else {
-            send(res, 500, { status: 500, message: 'Mock server error.' })
+            // Like the real backend: no internal details in the response, only in the server log.
+            server.config.logger.error(`[mock] ${req.method} ${path} failed: ${String(error)}`)
+            sendProblem(res, path, 500, { code: 'INTERNAL_ERROR' })
           }
         }
       })
