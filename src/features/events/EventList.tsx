@@ -31,10 +31,18 @@ const hrefFor = (page: number, size: number) => `/events?page=${page}&size=${siz
 /** Upcoming campus events, soonest first, one page at a time. A University Admin also gets a Create event button. */
 function EventList() {
   const { user } = useAuth()
-  const { page, size, createdId } = readQuery(useSearch())
+  const { page, size } = readQuery(useSearch())
   const [result, setResult] = useState<Page<CampusEvent> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // /events?created=<id> is opened right after creating an event. Remember it once, then drop ?created=
+  // from the address, so a reload does not show the message again. Opening another page hides it.
+  const [created] = useState(() => ({ id: readQuery(window.location.search).createdId, page, size }))
+  useEffect(() => {
+    if (created.id) window.history.replaceState(null, '', hrefFor(created.page, created.size))
+  }, [created])
+  const createdId = created.id && created.page === page && created.size === size ? created.id : null
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +80,7 @@ function EventList() {
         )}
       </header>
 
-      {/* /events?created=<id> is opened right after creating an event. It may be on another page. */}
+      {/* The new event may be on another page, so link to it. */}
       {createdId && (
         <p className="form-success" role="status">
           Your event was created. <Link to={`/events/${createdId}`}>View event</Link>

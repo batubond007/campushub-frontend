@@ -87,6 +87,16 @@ In the frontend:
 - The API must be **same-origin** (`/api` behind nginx, or the Vite proxy in development), so the cookie is sent
   and `SameSite=Strict` protects `/refresh` and `/logout` against CSRF.
 
+## Roles
+Hiding buttons and pages by role (e.g. Create event for `UNIVERSITY_ADMIN`, `RequireRole`) only keeps the
+screens clear. **The backend must check the role on every request** and answer `403` with code `FORBIDDEN`,
+because anyone can call the API directly.
+
+| Endpoint | Allowed roles |
+|---|---|
+| `GET /api/events`, `GET /api/events/{id}` | every signed-in user |
+| `POST /api/events` | `UNIVERSITY_ADMIN` |
+
 ## Paging
 List endpoints use Spring's `Pageable` conventions: `GET /api/events?page=0&size=10`
 (`page` counts from 0, `size` 1–50, defaults 0 and 10; invalid values → `400 VALIDATION_FAILED`).

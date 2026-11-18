@@ -25,8 +25,12 @@ function CreateEventForm() {
       if (field === 'startDate' && value && (!current.endDate || current.endDate < value)) next.endDate = value
       return next
     })
-    // Clear a field's message as soon as it is edited.
-    if (errors[field]) setErrors((current) => ({ ...current, [field]: undefined }))
+    // Clear a field's message as soon as it is edited, and the banner on top once no field has a message left.
+    if (errors[field]) {
+      const remaining = { ...errors, [field]: undefined }
+      setErrors(remaining)
+      if (!Object.values(remaining).some(Boolean)) setFormError(null)
+    }
   }
 
   async function handleSubmit(event: FormEvent) {
