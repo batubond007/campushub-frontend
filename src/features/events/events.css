@@ -231,7 +231,7 @@
 
 @media (min-width: 560px) {
   .event-form-row {
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
   }
 }
 

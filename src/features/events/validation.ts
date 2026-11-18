@@ -4,8 +4,9 @@ export interface EventFormValues {
   title: string
   description: string
   location: string
-  date: string // yyyy-mm-dd from <input type="date">
+  startDate: string // yyyy-mm-dd from <input type="date">
   startTime: string // hh:mm from <input type="time">
+  endDate: string // may be a later day: events can run past midnight or over several days
   endTime: string
 }
 
@@ -39,19 +40,27 @@ export function validateEvent(values: EventFormValues): EventFormErrors {
   text('description', 'Description')
   text('location', 'Location')
 
-  if (!values.date) errors.date = 'Please choose a date.'
-  else if (values.date < todayString()) errors.date = 'The date cannot be in the past.'
-
+  // yyyy-mm-dd strings compare correctly as text.
+  if (!values.startDate) errors.startDate = 'Please choose a start date.'
+  else if (values.startDate < todayString()) errors.startDate = 'The start date cannot be in the past.'
   if (!values.startTime) errors.startTime = 'Please choose a start time.'
+
+  if (!values.endDate) errors.endDate = 'Please choose an end date.'
+  else if (values.startDate && values.endDate < values.startDate) {
+    errors.endDate = 'The end date cannot be before the start date.'
+  }
   if (!values.endTime) errors.endTime = 'Please choose an end time.'
 
-  if (values.date && values.startTime && !errors.date) {
-    if (toDate(values.date, values.startTime).getTime() <= Date.now()) {
+  if (values.startDate && values.startTime && !errors.startDate) {
+    if (toDate(values.startDate, values.startTime).getTime() <= Date.now()) {
       errors.startTime = 'The start time has already passed.'
     }
   }
-  if (values.startTime && values.endTime && values.endTime <= values.startTime) {
-    errors.endTime = 'End time must be after the start time.'
+  const complete = values.startDate && values.startTime && values.endDate && values.endTime
+  if (complete && !errors.endDate) {
+    if (toDate(values.endDate, values.endTime) <= toDate(values.startDate, values.startTime)) {
+      errors.endTime = 'The event must end after it starts.'
+    }
   }
 
   return errors

@@ -6,7 +6,9 @@ import { HttpError } from '@/lib/http'
 import { Link, navigate } from '@/lib/router'
 import '@/features/events/events.css'
 
-const EMPTY: EventFormValues = { title: '', description: '', location: '', date: '', startTime: '', endTime: '' }
+const EMPTY: EventFormValues = {
+  title: '', description: '', location: '', startDate: '', startTime: '', endDate: '', endTime: '',
+}
 
 /** COD-118: a University Admin creates an official campus event. */
 function CreateEventForm() {
@@ -16,7 +18,13 @@ function CreateEventForm() {
   const [submitting, setSubmitting] = useState(false)
 
   const update = (field: keyof EventFormValues) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setValues((current) => ({ ...current, [field]: e.target.value }))
+    const value = e.target.value
+    setValues((current) => {
+      const next = { ...current, [field]: value }
+      // Most events end on the day they start: fill in (or move up) the end date to match.
+      if (field === 'startDate' && value && (!current.endDate || current.endDate < value)) next.endDate = value
+      return next
+    })
     // Clear a field's message as soon as it is edited.
     if (errors[field]) setErrors((current) => ({ ...current, [field]: undefined }))
   }
@@ -37,8 +45,8 @@ function CreateEventForm() {
         title: values.title.trim(),
         description: values.description.trim(),
         location: values.location.trim(),
-        startTime: toDate(values.date, values.startTime).toISOString(),
-        endTime: toDate(values.date, values.endTime).toISOString(),
+        startTime: toDate(values.startDate, values.startTime).toISOString(),
+        endTime: toDate(values.endDate, values.endTime).toISOString(),
       })
       navigate(`/events?created=${created.id}`)
     } catch (e) {
@@ -92,13 +100,13 @@ function CreateEventForm() {
 
         <div className="event-form-row">
           <FormField
-            id="date"
-            label="Date"
+            id="startDate"
+            label="Start date"
             type="date"
             min={todayString()}
-            value={values.date}
-            onChange={update('date')}
-            error={errors.date}
+            value={values.startDate}
+            onChange={update('startDate')}
+            error={errors.startDate}
           />
           <FormField
             id="startTime"
@@ -107,6 +115,18 @@ function CreateEventForm() {
             value={values.startTime}
             onChange={update('startTime')}
             error={errors.startTime}
+          />
+        </div>
+        <div className="event-form-row">
+          <FormField
+            id="endDate"
+            label="End date"
+            type="date"
+            min={values.startDate || todayString()}
+            value={values.endDate}
+            onChange={update('endDate')}
+            error={errors.endDate}
+            hint="Usually the same day. Pick a later day for events that run past midnight or over several days."
           />
           <FormField
             id="endTime"

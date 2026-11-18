@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getEvent } from '@/features/events/api'
-import { dateBlock, formatDuration, formatLongDay, formatTimeRange } from '@/features/events/format'
+import { dateBlock, formatDateRange, formatDuration, formatTimeRange } from '@/features/events/format'
 import type { EventDetail } from '@/features/events/types'
 import { HttpError } from '@/lib/http'
 import { Link } from '@/lib/router'
@@ -83,7 +83,7 @@ function EventDetails({ id }: { id: string }) {
           <dl className="event-facts" lang="en">
             <div>
               <dt>Date</dt>
-              <dd><time dateTime={event.startTime}>{formatLongDay(event.startTime)}</time></dd>
+              <dd><time dateTime={event.startTime}>{formatDateRange(event.startTime, event.endTime)}</time></dd>
             </div>
             <div>
               <dt>Time</dt>
