@@ -1,6 +1,6 @@
 import '@/components/NavBar.css'
 import { useAuth } from '@/features/auth/AuthContext'
-import { Link, navigate } from '@/lib/router'
+import { Link } from '@/lib/router'
 
 const SECTIONS = [
   { id: 'about', label: 'About' },
@@ -9,16 +9,10 @@ const SECTIONS = [
 ]
 
 // Top navigation bar, shared by every page.
-// Signed out: page sections, Log in / Sign up. Signed in: Events (+ Create event for University Admins),
-// the user's name for My account, and Log out (US-03).
+// Signed out: page sections, Log in / Sign up. Signed in: Events (+ Create event for University Admins)
+// and the user's name, which opens My account (Log out is there, US-03).
 function NavBar() {
-  const { status, user, logout } = useAuth()
-
-  function handleLogout() {
-    // Navigate in the same step as the session ends (see AccountOverview), then finish in the background.
-    void logout()
-    navigate('/login?loggedOut=1', { replace: true })
-  }
+  const { status, user } = useAuth()
 
   return (
     <header className="nav">
@@ -47,7 +41,6 @@ function NavBar() {
                 </span>
                 <span className="nav-user-name">{user.fullName.split(' ')[0]}</span>
               </Link>
-              <button type="button" className="button" onClick={handleLogout}>Log out</button>
             </span>
           ) : status === 'loading' ? null : ( // no Log in / Sign up flash while the session is checked
             <span className="nav-auth">

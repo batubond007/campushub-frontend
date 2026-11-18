@@ -107,10 +107,6 @@
   color: var(--muted);
 }
 
-.account-logout-title {
-  margin-top: 24px !important;
-}
-
 .button.account-logout {
   margin-top: 14px;
   border-color: var(--error);
@@ -125,8 +121,4 @@
 .button.account-logout:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.account-events-link {
-  margin-top: 14px;
 }
