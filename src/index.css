@@ -1,20 +1,133 @@
 :root {
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --muted: #5d6878;
+  --line: #d9dee6;
+  --primary: #2e86ab;
+  --primary-dark: #236b8a;
+  --odtu-red: #c8102e;
+  --error: #a2271b;
+  --error-bg: #fdecea;
+  --success: #1f6b45;
+  --success-bg: #e8f5ee;
+  --radius: 10px;
+
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
-  color: #1f2937;
-  background: #f9fafb;
+  color: var(--text);
+  background: var(--bg);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
 }
 
-.app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.button {
+  display: inline-block;
+  font: inherit;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.button.primary:hover {
+  background: var(--primary-dark);
+}
+
+/* Form messages shared by every feature */
+.form-alert {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.form-info,
+.form-success {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.form-info {
+  background: #eaf3f8;
+  color: var(--text);
+}
+
+.form-success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.form-alert a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.link-button {
+  font: inherit;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Shown by RequireRole to users without the right role */
+.no-access {
+  max-width: 560px;
+  margin: 64px auto;
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.no-access h1 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+.no-access p {
+  margin: 0 0 20px;
+  color: var(--muted);
 }

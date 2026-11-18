@@ -1,0 +1,66 @@
+/* Labelled inputs used by every form (auth, events, ...). */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.form-field input {
+  width: 100%;
+  font: inherit;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.form-field input:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.form-field input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.form-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.form-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--error);
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  padding-right: 64px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--primary-dark);
+  cursor: pointer;
+}
