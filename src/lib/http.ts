@@ -57,23 +57,66 @@ async function toHttpError(response: Response): Promise<HttpError> {
 }
 
 /**
- * Thin wrapper around fetch for calling the backend.
- * Each feature's `api.ts` should use this instead of calling fetch directly.
+ * How http() gets an access token for signed-in calls. Registered by features/auth/session.ts,
+ * so this file does not need to know how sessions work.
  */
-export async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  let response: Response
+export interface AccessTokenSource {
+  /** The current access token, or null when there is none or it has (almost) expired. */
+  current: () => string | null
+  /** Gets a new access token with the refresh cookie; null when the session has ended. */
+  refresh: () => Promise<string | null>
+}
+
+let tokenSource: AccessTokenSource | null = null
+
+export function setAccessTokenSource(source: AccessTokenSource) {
+  tokenSource = source
+}
+
+const sessionEnded = () => new HttpError(401, 'Your session has ended. Please log in again.', 'UNAUTHENTICATED')
+
+async function send(path: string, init: RequestInit | undefined, accessToken: string | null): Promise<Response> {
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    return await fetch(`${API_BASE_URL}${path}`, {
       ...init,
+      // The API is same-origin (/api behind nginx), so the httpOnly refresh cookie is sent by default.
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json, application/problem+json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...init?.headers,
       },
     })
   } catch {
     // Network failure: the server could not be reached at all.
     throw new HttpError(0, 'Could not reach the CampusHub server. Please try again.')
+  }
+}
+
+/**
+ * Thin wrapper around fetch for calling the backend.
+ * Each feature's `api.ts` should use this instead of calling fetch directly.
+ *
+ * With `{ auth: true }` the call is made as the signed-in user: the access token is added, and if it has
+ * expired (or the server answers 401) a new one is fetched with the refresh cookie and the call is retried
+ * once. If that fails too, the session has ended and an HttpError with status 401 is thrown.
+ */
+export async function http<T>(path: string, init?: RequestInit, options?: { auth?: boolean }): Promise<T> {
+  let response: Response
+  if (options?.auth) {
+    if (!tokenSource) throw new Error('http(): no access token source registered')
+    let token = tokenSource.current() ?? (await tokenSource.refresh())
+    if (!token) throw sessionEnded()
+    response = await send(path, init, token)
+    if (response.status === 401) {
+      // Expired or revoked a moment ago: refresh once and try again.
+      token = await tokenSource.refresh()
+      if (!token) throw sessionEnded()
+      response = await send(path, init, token)
+    }
+  } else {
+    response = await send(path, init, null)
   }
 
   if (!response.ok) throw await toHttpError(response)

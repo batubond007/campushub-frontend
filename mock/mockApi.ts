@@ -27,6 +27,15 @@ function readBody(req: IncomingMessage): Promise<Body> {
   })
 }
 
+function parseCookies(header: string | undefined) {
+  const cookies: Record<string, string> = {}
+  for (const part of (header ?? '').split(';')) {
+    const index = part.indexOf('=')
+    if (index > 0) cookies[part.slice(0, index).trim()] = decodeURIComponent(part.slice(index + 1).trim())
+  }
+  return cookies
+}
+
 function send(res: ServerResponse, status: number, body: unknown, contentType = 'application/json') {
   res.statusCode = status
   res.setHeader('Content-Type', contentType)
@@ -52,9 +61,13 @@ export function mockApi(): Plugin {
         const auth = req.headers.authorization ?? ''
         const token = auth.startsWith('Bearer ') ? auth.slice(7) : null
 
+        const setCookies: string[] = []
+        const ctx = { cookies: parseCookies(req.headers.cookie), setCookie: (c: string) => setCookies.push(c) }
+
         await new Promise((r) => setTimeout(r, 300)) // feel like a real network call
         try {
-          const result = match.handler(await readBody(req), token, match.params)
+          const result = match.handler(await readBody(req), token, match.params, ctx)
+          if (setCookies.length) res.setHeader('Set-Cookie', setCookies)
           if (result === undefined) {
             res.statusCode = 204
             res.end()
@@ -62,6 +75,8 @@ export function mockApi(): Plugin {
             send(res, 200, result)
           }
         } catch (error) {
+          // e.g. a refused refresh still clears the refresh cookie
+          if (setCookies.length) res.setHeader('Set-Cookie', setCookies)
           if (error instanceof ApiError) {
             const fieldErrors = Object.keys(error.fieldErrors).length ? { fieldErrors: error.fieldErrors } : {}
             sendProblem(res, path, error.status, { detail: error.message, code: error.code, ...fieldErrors })

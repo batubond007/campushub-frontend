@@ -1,9 +1,13 @@
-import { ApiError, type Routes } from './shared'
+import { ApiError, type CookieContext, type Routes } from './shared'
 
 // Mock of the backend's /api/auth and /api/me endpoints (see mock/mockApi.ts for how it is switched on).
 // Rules follow the backend contract (US-01, US-02, US-03):
-// tokens last 2 hours and log-out ends every session of that user;
-// 6-digit code valid 10 minutes, 5 wrong attempts, 60 s before a new code can be sent.
+// - Log-in returns a short-lived access token (15 min, sent as `Authorization: Bearer …`) in the body and
+//   a refresh token (7 days) in an httpOnly cookie that JavaScript cannot read.
+// - POST /api/auth/refresh swaps the refresh cookie for a new access token and a NEW refresh cookie
+//   (rotation). Re-using an already used refresh token counts as theft: every session of that user ends.
+// - Log-out revokes every refresh token of the user, so the session ends on every device.
+// - 6-digit code valid 10 minutes, 5 wrong attempts, 60 s before a new code can be sent.
 // No e-mail is sent: every code is MOCK_OTP and is also printed in the terminal.
 
 const MOCK_OTP = '123456'
@@ -28,9 +32,44 @@ export interface MockUser {
 
 const users = new Map<string, MockUser>()
 let nextId = 1
-// Active log-in tokens. Logging out removes every token of that user, like the real backend.
-const sessions = new Map<string, { email: string; expiresAt: number }>()
-const TOKEN_MS = 2 * 60 * 60 * 1000
+// To watch the refresh flow in the browser, lower ACCESS_TOKEN_MS to e.g. 30_000 (30 s).
+const ACCESS_TOKEN_MS = 15 * 60 * 1000
+const REFRESH_TOKEN_MS = 7 * 24 * 60 * 60 * 1000
+const REFRESH_COOKIE = 'campushub_refresh'
+
+// Access tokens are checked by expiry only (like a JWT). Refresh tokens are stored, so they can be revoked.
+const accessTokens = new Map<string, { email: string; expiresAt: number }>()
+const refreshTokens = new Map<string, { email: string; expiresAt: number; used: boolean }>()
+
+const randomToken = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
+
+function setRefreshCookie(ctx: CookieContext, token: string) {
+  // Production adds `Secure`; Path keeps the cookie off every request except /api/auth/*.
+  ctx.setCookie(
+    `${REFRESH_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=${REFRESH_TOKEN_MS / 1000}`,
+  )
+}
+
+function clearRefreshCookie(ctx: CookieContext) {
+  ctx.setCookie(`${REFRESH_COOKIE}=; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=0`)
+}
+
+/** Ends every session of a user: all refresh tokens and all access tokens. */
+function revokeAll(email: string) {
+  for (const [key, t] of refreshTokens) if (t.email === email) refreshTokens.delete(key)
+  for (const [key, t] of accessTokens) if (t.email === email) accessTokens.delete(key)
+}
+
+/** A new access token in the body and a new refresh token in the cookie. */
+function issueTokens(user: MockUser, ctx: CookieContext) {
+  const now = Date.now()
+  const accessToken = randomToken('access')
+  accessTokens.set(accessToken, { email: user.email, expiresAt: now + ACCESS_TOKEN_MS })
+  const refreshToken = randomToken('refresh')
+  refreshTokens.set(refreshToken, { email: user.email, expiresAt: now + REFRESH_TOKEN_MS, used: false })
+  setRefreshCookie(ctx, refreshToken)
+  return { accessToken, expiresAt: new Date(now + ACCESS_TOKEN_MS).toISOString(), user: profile(user) }
+}
 
 function addUser(email: string, password: string, fullName: string, status: Status, role: Role = 'STUDENT') {
   const user: MockUser = {
@@ -82,9 +121,9 @@ function profile(user: MockUser) {
   }
 }
 
-/** The signed-in user for a Bearer token, or 401. */
+/** The signed-in user for a Bearer access token, or 401. */
 export function userForToken(token: string | null) {
-  const session = token ? sessions.get(token) : undefined
+  const session = token ? accessTokens.get(token) : undefined
   const user = session && session.expiresAt > Date.now() ? users.get(session.email) : undefined
   if (!user || user.status !== 'ACTIVE') {
     throw new ApiError(401, 'UNAUTHENTICATED', 'Your session has ended. Please log in again.')
@@ -148,7 +187,7 @@ export const authRoutes: Routes = {
     return { message: 'We sent a new code.' }
   },
 
-  'POST /api/auth/login': (body) => {
+  'POST /api/auth/login': (body, _token, _params, ctx) => {
     const user = users.get(normalize(body.email))
     if (!user || user.password !== String(body.password ?? '')) {
       throw new ApiError(401, 'BAD_CREDENTIALS', 'E-mail or password is incorrect.')
@@ -159,15 +198,36 @@ export const authRoutes: Routes = {
     if (user.status === 'DISABLED') {
       throw new ApiError(403, 'ACCOUNT_DISABLED', 'This account has been disabled. Please contact the administrator.')
     }
-    const token = `mock-${user.id}-${Math.random().toString(36).slice(2)}`
-    const expiresAt = Date.now() + TOKEN_MS
-    sessions.set(token, { email: user.email, expiresAt })
-    return { token, expiresAt: new Date(expiresAt).toISOString(), user: profile(user) }
+    return issueTokens(user, ctx)
   },
 
-  'POST /api/auth/logout': (_body, token) => {
-    const user = userForToken(token)
-    for (const [key, session] of sessions) if (session.email === user.email) sessions.delete(key)
+  // Uses only the refresh cookie (no Bearer token), so it also works after the access token expired.
+  'POST /api/auth/refresh': (_body, _token, _params, ctx) => {
+    const presented = ctx.cookies[REFRESH_COOKIE]
+    const stored = presented ? refreshTokens.get(presented) : undefined
+    const refuse = (detail: string) => {
+      clearRefreshCookie(ctx)
+      return new ApiError(401, 'UNAUTHENTICATED', detail)
+    }
+    if (!stored || stored.expiresAt <= Date.now()) throw refuse('Your session has ended. Please log in again.')
+    if (stored.used) {
+      // Someone is replaying an old refresh token: treat it as stolen and end every session of the user.
+      revokeAll(stored.email)
+      throw refuse('Your session has ended for security reasons. Please log in again.')
+    }
+    const user = users.get(stored.email)
+    if (!user || user.status !== 'ACTIVE') throw refuse('Your session has ended. Please log in again.')
+    stored.used = true
+    return issueTokens(user, ctx)
+  },
+
+  // Ends the session on every device. Always succeeds, even without a (valid) cookie.
+  'POST /api/auth/logout': (_body, token, _params, ctx) => {
+    const fromCookie = refreshTokens.get(ctx.cookies[REFRESH_COOKIE] ?? '')?.email
+    const fromAccess = token ? accessTokens.get(token)?.email : undefined
+    const email = fromCookie ?? fromAccess
+    if (email) revokeAll(email)
+    clearRefreshCookie(ctx)
     return undefined
   },
 

@@ -20,8 +20,14 @@ export interface LoginRequest {
   password: string
 }
 
-export interface LoginResponse {
-  token: string
+/**
+ * Answer of POST /api/auth/login and POST /api/auth/refresh.
+ * The refresh token is NOT here: the server sets it as an httpOnly cookie that JavaScript cannot read.
+ */
+export interface AuthSession {
+  /** Short-lived (about 15 min); sent as `Authorization: Bearer …`. Kept in memory only. */
+  accessToken: string
+  /** When the access token stops working (ISO 8601). */
   expiresAt: string
   user: Profile
 }

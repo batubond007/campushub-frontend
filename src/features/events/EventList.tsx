@@ -9,22 +9,21 @@ import '@/features/events/events.css'
 
 /** Upcoming campus events, soonest first. A University Admin also gets a Create event button. */
 function EventList() {
-  const { token, user } = useAuth()
+  const { user } = useAuth()
   const [events, setEvents] = useState<CampusEvent[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   // /events?created=<id> is opened right after creating an event: show a message and mark that card.
   const [createdId] = useState(() => Number(getQueryParam('created')) || null)
 
   useEffect(() => {
-    if (!token) return
     let cancelled = false
-    listEvents(token)
+    listEvents()
       .then((page) => !cancelled && setEvents(page.content))
       .catch((e) => !cancelled && setError(e instanceof HttpError ? e.message : 'Could not load events.'))
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [])
 
   const created = events?.find((event) => event.id === createdId)
 

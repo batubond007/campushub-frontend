@@ -12,7 +12,7 @@ const SECTIONS = [
 // Signed out: page sections, Log in / Sign up. Signed in: Events (+ Create event for University Admins),
 // the user's name for My account, and Log out (US-03).
 function NavBar() {
-  const { user, logout } = useAuth()
+  const { status, user, logout } = useAuth()
 
   function handleLogout() {
     // Navigate in the same step as the session ends (see AccountOverview), then finish in the background.
@@ -49,7 +49,7 @@ function NavBar() {
               </Link>
               <button type="button" className="button" onClick={handleLogout}>Log out</button>
             </span>
-          ) : (
+          ) : status === 'loading' ? null : ( // no Log in / Sign up flash while the session is checked
             <span className="nav-auth">
               <Link to="/login" className="button">Log in</Link>
               <Link to="/signup" className="button primary">Sign up</Link>

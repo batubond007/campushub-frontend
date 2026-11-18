@@ -8,16 +8,17 @@ import { navigate } from '@/lib/router'
  * to Log in, and comes back to this page after logging in.
  */
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { status } = useAuth()
   // Remember this page's address once: by the time an effect runs again the URL may already be /login.
   const [here] = useState(() => window.location.pathname + window.location.search)
 
   useEffect(() => {
-    if (!user) navigate(`/login?next=${encodeURIComponent(here)}`, { replace: true })
-  }, [user, here])
+    // While 'loading' the app is still asking the server for a session: wait instead of redirecting.
+    if (status === 'signedOut') navigate(`/login?next=${encodeURIComponent(here)}`, { replace: true })
+  }, [status, here])
 
-  // Render nothing until redirected, so protected content never flashes on screen.
-  return user ? <>{children}</> : null
+  // Render nothing while loading or until redirected, so protected content never flashes on screen.
+  return status === 'signedIn' ? <>{children}</> : null
 }
 
 export default RequireAuth

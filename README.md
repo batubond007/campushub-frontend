@@ -32,7 +32,7 @@ Requests to `/api/*` are proxied to the backend at `http://localhost:8080` (see 
 ```bash
 npm run dev:mock   # http://localhost:5173, /api/* answered by the mock in mock/
 ```
-The mock covers sign-up, e-mail verification (OTP), resending the code, log-in, log-out, `GET /api/me`,
+The mock covers sign-up, e-mail verification (OTP), resending the code, log-in, token refresh, log-out, `GET /api/me`,
 listing events, event details and creating events (University Admin only), with the same rules
 as the backend (6-digit code, valid 10 minutes, 5 attempts, 60 s before a new code). No e-mail is sent:
 the code is always **`123456`** and is also printed in the terminal. Data lives in memory and resets when
@@ -62,6 +62,30 @@ Rules of thumb:
 - **No `fetch` in components:** backend calls go in a feature's `api.ts`.
 - **Start inside the feature;** move something to `components/` or `lib/` only once a second feature needs it.
 - Add sub-folders (e.g. `features/events/components/`) only when a feature grows to many files.
+
+## Authentication (access + refresh token)
+| | Access token | Refresh token |
+|---|---|---|
+| Lifetime | 15 min | 7 days |
+| Where | Response body; kept **in memory only** (`features/auth/session.ts`) | `campushub_refresh` cookie: `HttpOnly; Secure; SameSite=Strict; Path=/api/auth` |
+| Sent as | `Authorization: Bearer …` on signed-in calls | Automatically by the browser, only to `/api/auth/*` |
+| Checked by | Signature + expiry (stateless) | Lookup in the database (can be revoked) |
+
+Endpoints:
+- `POST /api/auth/login` → `{ accessToken, expiresAt, user }` + sets the refresh cookie.
+- `POST /api/auth/refresh` (cookie only) → same body + a **new** refresh cookie (rotation).
+  `401` when the session has ended. Re-using an old refresh token is treated as theft: every session of that user ends.
+- `POST /api/auth/logout` (cookie) → `204`, revokes all refresh tokens of the user (logs out every device), clears the cookie.
+
+In the frontend:
+- After a page load there is no access token yet: the app calls `/refresh` once (`status: 'loading'`).
+- Signed-in calls use `http(path, init, { auth: true })`. It adds the access token; if the token has expired
+  or the server answers `401`, it refreshes once and retries. If the refresh is refused, the session has ended
+  and protected pages send the student to Log in.
+- Only one refresh runs at a time, also across tabs (Web Locks API), so rotation never sees the same token twice.
+  Log-in / log-out in one tab is broadcast to the other tabs (`BroadcastChannel`).
+- The API must be **same-origin** (`/api` behind nginx, or the Vite proxy in development), so the cookie is sent
+  and `SameSite=Strict` protects `/refresh` and `/logout` against CSRF.
 
 ## API errors
 Every non-2xx response is an RFC 9457 Problem Details body (Spring `ProblemDetail`,

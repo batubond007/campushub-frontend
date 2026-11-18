@@ -18,14 +18,15 @@ function safeNext(next: string | null) {
  * (?next=…) or to their account. This also handles the redirect right after a successful login.
  */
 function RedirectIfSignedIn({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { status } = useAuth()
   const path = usePath()
 
   useEffect(() => {
-    if (user) navigate(safeNext(getQueryParam('next')), { replace: true })
-  }, [user, path])
+    if (status === 'signedIn') navigate(safeNext(getQueryParam('next')), { replace: true })
+  }, [status, path])
 
-  return user ? null : <>{children}</>
+  // Nothing while loading, so a signed-in student does not see the form flash before the redirect.
+  return status === 'signedOut' ? <>{children}</> : null
 }
 
 export default RedirectIfSignedIn

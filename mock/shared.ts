@@ -18,11 +18,20 @@ export class ApiError extends Error {
 
 export type Body = Record<string, unknown>
 
+/** Request cookies, and a way to add a Set-Cookie header to the response. */
+export interface CookieContext {
+  cookies: Record<string, string>
+  setCookie: (cookie: string) => void
+}
+
 /**
  * Handlers keyed by "METHOD /path". A path part like ":id" matches any value and is passed in `params`.
- * Return undefined for 204 No Content.
+ * `token` is the Bearer access token, if any. Return undefined for 204 No Content.
  */
-export type Routes = Record<string, (body: Body, token: string | null, params: Record<string, string>) => unknown>
+export type Routes = Record<
+  string,
+  (body: Body, token: string | null, params: Record<string, string>, ctx: CookieContext) => unknown
+>
 
 /** Finds the handler for a request, e.g. "GET /api/events/4" matches "GET /api/events/:id". */
 export function matchRoute(routes: Routes, method: string, path: string) {

@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
-import { useAuth } from '@/features/auth/AuthContext'
 import { FormField } from '@/components/FormField'
 import { createEvent } from '@/features/events/api'
 import { LIMITS, todayString, toDate, validateEvent, type EventFormErrors, type EventFormValues } from '@/features/events/validation'
@@ -11,7 +10,6 @@ const EMPTY: EventFormValues = { title: '', description: '', location: '', date:
 
 /** COD-118: a University Admin creates an official campus event. */
 function CreateEventForm() {
-  const { token } = useAuth()
   const [values, setValues] = useState(EMPTY)
   const [errors, setErrors] = useState<EventFormErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -32,11 +30,10 @@ function CreateEventForm() {
       setFormError('Please fix the highlighted fields.')
       return
     }
-    if (!token) return
 
     setSubmitting(true)
     try {
-      const created = await createEvent(token, {
+      const created = await createEvent({
         title: values.title.trim(),
         description: values.description.trim(),
         location: values.location.trim(),

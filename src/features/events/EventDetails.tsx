@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/features/auth/AuthContext'
 import { getEvent } from '@/features/events/api'
 import { dateBlock, formatDuration, formatLongDay, formatTimeRange } from '@/features/events/format'
 import type { EventDetail } from '@/features/events/types'
@@ -9,14 +8,12 @@ import '@/features/events/events.css'
 
 /** US-06: everything a student needs to decide whether to attend one event. */
 function EventDetails({ id }: { id: string }) {
-  const { token } = useAuth()
   const [event, setEvent] = useState<EventDetail | null>(null)
   const [error, setError] = useState<{ status: number; message: string } | null>(null)
 
   useEffect(() => {
-    if (!token) return
     let cancelled = false
-    getEvent(token, id)
+    getEvent(id)
       .then((result) => !cancelled && setEvent(result))
       .catch((e) => {
         if (cancelled) return
@@ -25,7 +22,7 @@ function EventDetails({ id }: { id: string }) {
     return () => {
       cancelled = true
     }
-  }, [token, id])
+  }, [id])
 
   if (error) {
     return (

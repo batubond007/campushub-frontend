@@ -1,7 +1,7 @@
 import { http } from '@/lib/http'
 import type {
+  AuthSession,
   LoginRequest,
-  LoginResponse,
   MessageResponse,
   Profile,
   RegisterRequest,
@@ -9,8 +9,22 @@ import type {
   VerifyRequest,
 } from '@/features/auth/types'
 
+/** Returns the access token; the server also sets the httpOnly refresh cookie. */
 export function login(body: LoginRequest) {
-  return http<LoginResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) })
+  return http<AuthSession>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) })
+}
+
+/**
+ * Swaps the refresh cookie for a new access token (and a new refresh cookie: rotation).
+ * 401 when the session has ended (expired, logged out, or the account is no longer active).
+ */
+export function refresh() {
+  return http<AuthSession>('/api/auth/refresh', { method: 'POST' })
+}
+
+/** Ends the session on the server for every device and clears the refresh cookie. */
+export function logout() {
+  return http<void>('/api/auth/logout', { method: 'POST' })
 }
 
 export function register(body: RegisterRequest) {
@@ -25,14 +39,7 @@ export function resendCode(email: string) {
   return http<MessageResponse>('/api/auth/resend-otp', { method: 'POST', body: JSON.stringify({ email }) })
 }
 
-const bearer = (token: string) => ({ Authorization: `Bearer ${token}` })
-
-/** The signed-in user's profile. Fails with 401 when the token is no longer valid. */
-export function getMe(token: string) {
-  return http<Profile>('/api/me', { headers: bearer(token) })
-}
-
-/** Ends the session on the server (all of this user's tokens stop working). */
-export function logout(token: string) {
-  return http<void>('/api/auth/logout', { method: 'POST', headers: bearer(token) })
+/** The signed-in user's profile. */
+export function getMe() {
+  return http<Profile>('/api/me', undefined, { auth: true })
 }
