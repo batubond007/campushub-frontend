@@ -42,7 +42,9 @@ npm run build      # type-checks, then writes static files to dist/
 npm run preview    # serve dist/ locally to check the build
 ```
 `dist/` contains only static files (`index.html` + hashed assets under `dist/assets/`).
-CI copies the contents of `dist/` to the hosting target.
+On merge to `main`, `.github/workflows/deploy.yml` uploads `dist/` to S3 and unpacks it on the EC2
+instance under `/var/www/campushub/` (served by nginx, which also proxies `/api` to the backend).
+AWS setup: see `campushub-backend/deploy/README.md`.
 
 In CI, prefer `npm ci` over `npm install` (requires the committed `package-lock.json`).
 
