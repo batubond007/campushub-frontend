@@ -465,3 +465,75 @@
     margin-left: 0;
   }
 }
+
+
+/* University Admin actions on the detail page */
+.event-detail-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-admin-actions {
+  display: flex;
+  gap: 8px;
+  align-self: flex-start;
+}
+
+.button.danger {
+  border-color: var(--error);
+  color: var(--error);
+  font-weight: 600;
+}
+
+.button.danger:hover:not(:disabled) {
+  background: var(--error-bg);
+}
+
+.button.danger.solid {
+  background: var(--error);
+  color: #fff;
+}
+
+.button.danger.solid:hover:not(:disabled) {
+  background: #861f15;
+}
+
+.event-admin-actions .button:disabled,
+.confirm-actions .button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm-box {
+  padding: 20px;
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.confirm-box p {
+  margin: 0 0 8px;
+}
+
+.confirm-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@media (max-width: 560px) {
+  .event-detail-header {
+    flex-wrap: wrap;
+  }
+
+  .event-admin-actions {
+    width: 100%;
+  }
+}

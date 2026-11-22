@@ -16,6 +16,16 @@ interface OtpInputProps {
 function OtpInput({ value, onChange, length = 6, invalid, disabled, describedBy }: OtpInputProps) {
   const inputs = useRef<(HTMLInputElement | null)[]>([])
   const digits = Array.from({ length }, (_, i) => value[i] ?? '')
+  // The code as it is right now. After typing a digit we move the cursor before React has re-rendered,
+  // so the `value` prop is still the old code at that moment; onFocus below must read this ref instead,
+  // or it would think the next box is past the end and send the cursor back to the first box.
+  const latest = useRef(value)
+  latest.current = value
+
+  function change(next: string) {
+    latest.current = next
+    onChange(next)
+  }
 
   const focus = (index: number) => inputs.current[Math.max(0, Math.min(index, length - 1))]?.focus()
 
@@ -27,12 +37,12 @@ function OtpInput({ value, onChange, length = 6, invalid, disabled, describedBy 
   // The code is kept as one string with no gaps: boxes are always filled from the left.
   function setDigit(index: number, digit: string) {
     if (!digit) {
-      onChange(value.slice(0, index))
+      change(latest.current.slice(0, index))
       return
     }
     const next = digits.slice()
     next[index] = digit
-    onChange(next.join('').slice(0, length))
+    change(next.join('').slice(0, length))
   }
 
   function handleInput(index: number, raw: string) {
@@ -40,7 +50,7 @@ function OtpInput({ value, onChange, length = 6, invalid, disabled, describedBy 
     if (!typed) return
     if (typed.length > 1) {
       // Autofill (e.g. the code from an SMS/e-mail suggestion) can put several digits in one box.
-      onChange((digits.slice(0, index).join('') + typed).slice(0, length))
+      change((digits.slice(0, index).join('') + typed).slice(0, length))
       focus(index + typed.length)
       return
     }
@@ -67,7 +77,7 @@ function OtpInput({ value, onChange, length = 6, invalid, disabled, describedBy 
     const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, length)
     if (!pasted) return
     event.preventDefault()
-    onChange(pasted)
+    change(pasted)
     focus(pasted.length)
   }
 
@@ -85,7 +95,7 @@ function OtpInput({ value, onChange, length = 6, invalid, disabled, describedBy 
           onPaste={handlePaste}
           onFocus={(e) => {
             // Clicking an empty box further right jumps to the first empty one, so no gaps appear.
-            if (index > value.length) focus(value.length)
+            if (index > latest.current.length) focus(latest.current.length)
             else e.target.select()
           }}
           inputMode="numeric"

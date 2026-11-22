@@ -1,6 +1,7 @@
 import NavBar from '@/components/NavBar'
 import { AuthProvider } from '@/features/auth/AuthContext'
 import AccountPage from '@/pages/AccountPage'
+import EditEventPage from '@/pages/EditEventPage'
 import EventDetailPage from '@/pages/EventDetailPage'
 import EventsPage from '@/pages/EventsPage'
 import HomePage from '@/pages/HomePage'
@@ -22,6 +23,7 @@ const ROUTES: { path: string; render: (params: Record<string, string>) => React.
   { path: '/events', render: () => <EventsPage /> }, // protected (US-06)
   { path: '/events/new', render: () => <NewEventPage /> }, // University Admin only (COD-118)
   { path: '/events/:id', render: ({ id }) => <EventDetailPage key={id} id={id} /> }, // protected (US-06)
+  { path: '/events/:id/edit', render: ({ id }) => <EditEventPage key={id} id={id} /> }, // University Admin only
 ]
 
 function App() {

@@ -1,8 +1,8 @@
 import { userForToken } from './authMock'
 import { ApiError, type Routes } from './shared'
 
-// Mock of the backend's /api/events endpoints (COD-118 create, COD-14 list + details).
-// Every signed-in user can list events and open one; only a University Admin can create one.
+// Mock of the backend's /api/events endpoints (COD-118 create, COD-14 list + details, edit + delete).
+// Every signed-in user can list events and open one; only a University Admin can create, edit or delete one.
 
 interface MockEvent {
   id: number
@@ -118,6 +118,46 @@ function details(event: MockEvent) {
 }
 
 const LIMITS = { title: 120, description: 2000, location: 200 } as const
+
+function findEvent(id: string) {
+  const event = events.find((e) => e.id === Number(id))
+  if (!event) throw new ApiError(404, 'NOT_FOUND', 'This event could not be found. It may have been removed.')
+  return event
+}
+
+/** Only a University Admin may create, edit or delete campus events. */
+function requireUniversityAdmin(token: string | null, action: 'create' | 'edit' | 'delete') {
+  const user = userForToken(token)
+  if (user.role !== 'UNIVERSITY_ADMIN') {
+    throw new ApiError(403, 'FORBIDDEN', `Only a University Admin can ${action} campus events.`)
+  }
+  return user
+}
+
+/** Checks the body of a create or edit request, the same way for both. */
+function readEventBody(body: Record<string, unknown>) {
+  const errors: Record<string, string> = {}
+  const text = (field: keyof typeof LIMITS, label: string) => {
+    const value = String(body[field] ?? '').trim()
+    if (!value) errors[field] = `${label} is required.`
+    else if (value.length > LIMITS[field]) errors[field] = `${label} can be at most ${LIMITS[field]} characters.`
+    return value
+  }
+  const title = text('title', 'Title')
+  const description = text('description', 'Description')
+  const location = text('location', 'Location')
+
+  const start = Date.parse(String(body.startTime ?? ''))
+  const end = Date.parse(String(body.endTime ?? ''))
+  if (Number.isNaN(start)) errors.startTime = 'Start time is required.'
+  else if (start <= Date.now()) errors.startTime = 'Start time must be in the future.'
+  if (Number.isNaN(end)) errors.endTime = 'End time is required.'
+  else if (!Number.isNaN(start) && end <= start) errors.endTime = 'End time must be after the start time.'
+  if (Object.keys(errors).length) {
+    throw new ApiError(400, 'VALIDATION_FAILED', 'Please check the highlighted fields.', errors)
+  }
+  return { title, description, location, startTime: new Date(start).toISOString(), endTime: new Date(end).toISOString() }
+}
 const DEFAULT_PAGE_SIZE = 10
 const MAX_PAGE_SIZE = 50
 
@@ -151,44 +191,32 @@ export const eventRoutes: Routes = {
 
   'GET /api/events/:id': (_body, token, params) => {
     userForToken(token)
-    const event = events.find((e) => e.id === Number(params.id))
-    if (!event) throw new ApiError(404, 'NOT_FOUND', 'This event could not be found. It may have been removed.')
-    return details(event)
+    return details(findEvent(params.id))
   },
 
   'POST /api/events': (body, token) => {
-    const user = userForToken(token)
-    if (user.role !== 'UNIVERSITY_ADMIN') {
-      throw new ApiError(403, 'FORBIDDEN', 'Only a University Admin can create campus events.')
-    }
-
-    const errors: Record<string, string> = {}
-    const text = (field: keyof typeof LIMITS, label: string) => {
-      const value = String(body[field] ?? '').trim()
-      if (!value) errors[field] = `${label} is required.`
-      else if (value.length > LIMITS[field]) errors[field] = `${label} can be at most ${LIMITS[field]} characters.`
-      return value
-    }
-    const title = text('title', 'Title')
-    const description = text('description', 'Description')
-    const location = text('location', 'Location')
-
-    const start = Date.parse(String(body.startTime ?? ''))
-    const end = Date.parse(String(body.endTime ?? ''))
-    if (Number.isNaN(start)) errors.startTime = 'Start time is required.'
-    else if (start <= Date.now()) errors.startTime = 'Start time must be in the future.'
-    if (Number.isNaN(end)) errors.endTime = 'End time is required.'
-    else if (!Number.isNaN(start) && end <= start) errors.endTime = 'End time must be after the start time.'
-    if (Object.keys(errors).length) {
-      throw new ApiError(400, 'VALIDATION_FAILED', 'Please check the highlighted fields.', errors)
-    }
-
-    const event: MockEvent = {
-      id: nextId++, title, description, location,
-      startTime: new Date(start).toISOString(), endTime: new Date(end).toISOString(),
-      organizerName: user.fullName, createdAt: new Date().toISOString(),
-    }
+    const user = requireUniversityAdmin(token, 'create')
+    const fields = readEventBody(body)
+    const event: MockEvent = { id: nextId++, ...fields, organizerName: user.fullName, createdAt: new Date().toISOString() }
     events.push(event)
     return summary(event)
+  },
+
+  // Edit an event (all fields are sent again). The organizer stays the original one.
+  'PUT /api/events/:id': (body, token, params) => {
+    requireUniversityAdmin(token, 'edit')
+    const event = findEvent(params.id)
+    if (Date.parse(event.endTime) <= Date.now()) {
+      throw new ApiError(409, 'EVENT_ENDED', 'This event has already ended and can no longer be edited.')
+    }
+    Object.assign(event, readEventBody(body))
+    return details(event)
+  },
+
+  'DELETE /api/events/:id': (_body, token, params) => {
+    requireUniversityAdmin(token, 'delete')
+    const event = findEvent(params.id)
+    events.splice(events.indexOf(event), 1)
+    return undefined
   },
 }

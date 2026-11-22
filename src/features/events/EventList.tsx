@@ -23,6 +23,7 @@ function readQuery(search: string) {
     page: page >= 1 ? page : 1,
     size: (PAGE_SIZES as readonly number[]).includes(size) ? size : DEFAULT_SIZE,
     createdId: Number(params.get('created')) || null,
+    deletedTitle: params.get('deleted'),
   }
 }
 
@@ -39,9 +40,11 @@ function EventList() {
   // /events?created=<id> is opened right after creating an event. Remember it once, then drop ?created=
   // from the address, so a reload does not show the message again. Opening another page hides it.
   const [created] = useState(() => ({ id: readQuery(window.location.search).createdId, page, size }))
+  // Same for /events?deleted=<title>, opened right after deleting an event from its detail page.
+  const [deletedTitle] = useState(() => readQuery(window.location.search).deletedTitle)
   useEffect(() => {
-    if (created.id) window.history.replaceState(null, '', hrefFor(created.page, created.size))
-  }, [created])
+    if (created.id || deletedTitle) window.history.replaceState(null, '', hrefFor(created.page, created.size))
+  }, [created, deletedTitle])
   const createdId = created.id && created.page === page && created.size === size ? created.id : null
 
   useEffect(() => {
@@ -85,6 +88,9 @@ function EventList() {
         <p className="form-success" role="status">
           Your event was created. <Link to={`/events/${createdId}`}>View event</Link>
         </p>
+      )}
+      {deletedTitle && (
+        <p className="form-success" role="status">“{deletedTitle}” was deleted.</p>
       )}
       {error && <p className="form-alert" role="alert">{error}</p>}
 
