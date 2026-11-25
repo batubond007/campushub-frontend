@@ -18,3 +18,13 @@ export function getEvent(id: string) {
 export function createEvent(body: CreateEventRequest) {
   return http<CampusEvent>('/api/events', { method: 'POST', body: JSON.stringify(body) }, { auth: true })
 }
+
+/** University Admins only: replaces the event's fields. 409 EVENT_ENDED once the event is over. */
+export function updateEvent(id: number, body: CreateEventRequest) {
+  return http<EventDetail>(`/api/events/${id}`, { method: 'PUT', body: JSON.stringify(body) }, { auth: true })
+}
+
+/** University Admins only: removes the event for everyone. */
+export function deleteEvent(id: number) {
+  return http<void>(`/api/events/${id}`, { method: 'DELETE' }, { auth: true })
+}

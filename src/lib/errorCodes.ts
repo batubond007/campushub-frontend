@@ -23,3 +23,5 @@ export type ErrorCode =
   | 'OTP_INVALID' // 400: wrong code, attempts are left
   | 'OTP_TOO_MANY_ATTEMPTS' // 400
   | 'OTP_COOLDOWN' // 429: a new code was requested too soon
+  // Campus events (COD-118, COD-14)
+  | 'EVENT_ENDED' // 409: an event that has already ended cannot be edited
